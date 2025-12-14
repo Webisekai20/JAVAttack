@@ -43,32 +43,37 @@ public class JAVAttack extends JPanel implements ActionListener, KeyListener {
     ArrayList<Image> alienImgArray;
 
 
+    //shooting mechanics
+    long shootBuffer = 0;
+    long bufferTime = 500; //in milliseconds
 
     //ship
-    int shipWidth = tileSize*2;  // 64
-    int shipHeight = tileSize;  ///32
+    int shipWidth = tileSize;  // 64
+    int shipHeight = tileSize/2;  ///32
     int shipX = tileSize*columns/2 - tileSize;
     int shipY = boardHeight - tileSize*2;
     int shipVelocityX = tileSize;
+    
     Block ship;
 
     //aliens
     ArrayList<Block> alienArray;
-    int alienWidth = tileSize*2;
-    int alienHeight = tileSize;
+    int alienWidth = tileSize;
+    int alienHeight = tileSize/2;
     int alienX = tileSize;
     int alienY = tileSize;
 
     int alienRows = 2;
     int alineColumn = 3;
     int alienCount = 0; // num of aliens to defeat
-    int alienVelocityX = 1;
+    int alienVelocityX = 4;
 
     // bullets
     ArrayList<Block> bulletArray;
+    ArrayList<Block> alienBullets;
     int bulletWidth = tileSize/8;
     int bulletHeight = tileSize/2;
-    int bulletVelocityY = -10;// moving speed
+    int bulletVelocityY = -7;// moving speed
 
 
     Timer gameLoop;  
@@ -102,6 +107,7 @@ public class JAVAttack extends JPanel implements ActionListener, KeyListener {
         ship = new Block(shipX, shipY, shipWidth, shipHeight, shipImg);
         alienArray = new ArrayList<Block>();
         bulletArray = new ArrayList<Block>();
+        alienBullets = new ArrayList<Block>();
         
          // Load and start background music
         try {
@@ -155,6 +161,14 @@ public class JAVAttack extends JPanel implements ActionListener, KeyListener {
             }
         }
 
+        for(int i = 0; i < alienBullets.size(); i++){
+            Block bullet = alienBullets.get(i);
+            if(!bullet.used){
+                //g.drawRect(bullet.x, bullet.y, bullet.width, bullet.height);
+                g.fillRect(bullet.x, bullet.y, bullet.width, bullet.height);
+            }
+        }
+
 
         // score
         g.setColor(Color.ORANGE);
@@ -170,10 +184,18 @@ public class JAVAttack extends JPanel implements ActionListener, KeyListener {
 
     public void move(){
         //aliens
+        int random;
+        Random rand = new Random();
         for(int i = 0; i < alienArray.size(); i++){
             Block alien = alienArray.get(i);
             if(alien.alive){
                 alien.x += alienVelocityX;
+
+                random = rand.nextInt(100) + 1;
+
+                if(random == 1){  // chances are 1/100 frames. change the param in rand.nextInt() to change the chances
+                    alienBullets.add(new Block(alien.x + alienWidth*15/32, alien.y, bulletWidth, bulletHeight, null));
+                }
 
                 if (alien.x + alien.width >= boardWidth || alien.x <=0) {
                     alienVelocityX *= -1;
@@ -206,9 +228,25 @@ public class JAVAttack extends JPanel implements ActionListener, KeyListener {
             }
         }
 
+        for(int i = 0;i < alienBullets.size(); i++ ){
+            Block bullet = alienBullets.get(i);
+            bullet.y += -bulletVelocityY;
+
+            // bullet collision with aliens
+                if(detectCollision(bullet, ship)){
+                    bullet.used = true;
+                    gameOver = true;
+                }
+            
+        }
+
         // clear out of screen bullets
         while(bulletArray.size() >0 && (bulletArray.get(0).used || bulletArray.get(0).y < 0)){
             bulletArray.remove(0);
+        }
+
+        while(alienBullets.size() >0 && (alienBullets.get(0).used || alienBullets.get(0).y < 0)){
+            alienBullets.remove(0);
         }
 
         // next level
@@ -220,7 +258,8 @@ public class JAVAttack extends JPanel implements ActionListener, KeyListener {
             alienRows = Math.min(alienRows+1, rows - 6);
             alienArray.clear();
             bulletArray.clear();
-            alienVelocityX = 1;
+            alienBullets.clear();
+            alienVelocityX = 4;
             createAliens();
         }
     }
@@ -276,8 +315,9 @@ public class JAVAttack extends JPanel implements ActionListener, KeyListener {
             ship.x = shipX;
             alienArray.clear();
             bulletArray.clear();
+            alienBullets.clear();
             score = 0;
-            alienVelocityX = 1;
+            alienVelocityX = 4;
             alineColumn = 3;
             alienRows = 2;
             level = 1;
@@ -294,9 +334,10 @@ public class JAVAttack extends JPanel implements ActionListener, KeyListener {
         else if(e.getKeyCode() == KeyEvent.VK_RIGHT && ship.x + ship.width + shipVelocityX <= boardWidth){
             ship.x += shipVelocityX;
         }
-        else if(e.getKeyCode() == KeyEvent.VK_SPACE){
+        else if(e.getKeyCode() == KeyEvent.VK_SPACE &&  System.currentTimeMillis() - shootBuffer > bufferTime){
             Block bullet  = new Block(ship.x + shipWidth*15/32, ship.y, bulletWidth, bulletHeight, null);
             bulletArray.add(bullet);
+            shootBuffer = System.currentTimeMillis();
                 // Play bullet sound
             // if (bulletSound != null) {
             //     bulletSound.setFramePosition(0);
