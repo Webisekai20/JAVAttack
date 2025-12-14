@@ -1,12 +1,18 @@
 import java.awt.*;
 import java.awt.event.*;
 import java.awt.print.Book;
+import java.io.File;
 import java.util.ArrayList;
 import java.util.Random;
 import javax.swing.*;
 import javax.sound.sampled.AudioInputStream;
 import javax.sound.sampled.AudioSystem;
 import javax.sound.sampled.Clip;
+import javax.sound.sampled.LineUnavailableException;
+import javax.sound.sampled.UnsupportedAudioFileException;
+import java.io.File;
+import java.io.IOException;
+import javax.sound.sampled.FloatControl; 
 
 
 public class JAVAttack extends JPanel implements ActionListener, KeyListener {
@@ -226,7 +232,7 @@ public class JAVAttack extends JPanel implements ActionListener, KeyListener {
             if(alien.alive){
                 alien.x += alienVelocityX;
 
-                random = rand.nextInt(100 + (10 * level)) + 1;
+                random = rand.nextInt(100 + (100 * level)) + 1;
 
                 if(random == 1){  // chances are 1/100 frames. change the param in rand.nextInt() to change the chances
                     alienBullets.add(new Block(alien.x + alienWidth*15/32, alien.y, bulletWidth, bulletHeight, null));
@@ -412,6 +418,23 @@ public class JAVAttack extends JPanel implements ActionListener, KeyListener {
             Block bullet  = new Block(ship.x + shipWidth*15/32, ship.y, bulletWidth, bulletHeight, null);
             bulletArray.add(bullet);
             shootBuffer = System.currentTimeMillis();
+
+            try {
+                File soundFile = new File("shootShip.wav");
+                AudioInputStream audioIn = AudioSystem.getAudioInputStream(soundFile);
+                Clip clip = AudioSystem.getClip();
+                //FloatControl volume = (FloatControl) clip.getControl(FloatControl.Type.MASTER_GAIN);
+                //volume.setValue(-10.0f);
+                clip.open(audioIn);
+                clip.start();
+            } catch (UnsupportedAudioFileException except) {
+                except.printStackTrace();
+            } catch (IOException except) {
+                except.printStackTrace();
+            } catch (LineUnavailableException except) {
+                except.printStackTrace();
+}
+
                 // Play bullet sound
             // if (bulletSound != null) {
             //     bulletSound.setFramePosition(0);
