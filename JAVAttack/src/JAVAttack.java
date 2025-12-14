@@ -47,12 +47,16 @@ public class JAVAttack extends JPanel implements ActionListener, KeyListener {
     long shootBuffer = 0;
     long bufferTime = 500; //in milliseconds
 
+    //movement booleans
+    boolean left = false;
+    boolean right = false;
+
     //ship
     int shipWidth = tileSize;  // 64
     int shipHeight = tileSize/2;  ///32
     int shipX = tileSize*columns/2 - tileSize;
     int shipY = boardHeight - tileSize*2;
-    int shipVelocityX = tileSize;
+    int shipVelocityX = tileSize/5;
     
     Block ship;
 
@@ -191,7 +195,7 @@ public class JAVAttack extends JPanel implements ActionListener, KeyListener {
             if(alien.alive){
                 alien.x += alienVelocityX;
 
-                random = rand.nextInt(100) + 1;
+                random = rand.nextInt(100 + (10 * level)) + 1;
 
                 if(random == 1){  // chances are 1/100 frames. change the param in rand.nextInt() to change the chances
                     alienBullets.add(new Block(alien.x + alienWidth*15/32, alien.y, bulletWidth, bulletHeight, null));
@@ -289,10 +293,23 @@ public class JAVAttack extends JPanel implements ActionListener, KeyListener {
                a.y + a.height > b.y;  
     }
 
+    private void moveShip(){
+        if(left || right){
+        if (left && ship.x - shipVelocityX >= 0) {
+            ship.x -= shipVelocityX;
+        }
+        if(right && ship.x + ship.width + shipVelocityX <= boardWidth){
+            ship.x += shipVelocityX;
+        }
+        }
+    }
+
     @Override
     public void actionPerformed(ActionEvent e) {
        move();
-        repaint();
+       moveShip(); 
+       repaint();
+        
         if(gameOver){
             gameLoop.stop();
             if (backgroundMusic != null) {
@@ -303,13 +320,28 @@ public class JAVAttack extends JPanel implements ActionListener, KeyListener {
     }
 
     @Override
-    public void keyTyped(KeyEvent e) {}
+    public void keyTyped(KeyEvent e) {
+
+    }
 
     @Override
-    public void keyPressed(KeyEvent e) {}
+    public void keyPressed(KeyEvent e) {
+        if (e.getKeyCode() == KeyEvent.VK_LEFT && ship.x - shipVelocityX >= 0) {
+            left = true;
+        }
+        if(e.getKeyCode() == KeyEvent.VK_RIGHT && ship.x + ship.width + shipVelocityX <= boardWidth){
+            right = true;
+        }
+    }
 
     @Override
     public void keyReleased(KeyEvent e) {
+        if (e.getKeyCode() == KeyEvent.VK_LEFT && ship.x - shipVelocityX >= 0) {
+            left = false;
+        }
+        if(e.getKeyCode() == KeyEvent.VK_RIGHT && ship.x + ship.width + shipVelocityX <= boardWidth){
+            right = false;
+        }
         if(gameOver){
 
             ship.x = shipX;
@@ -328,12 +360,12 @@ public class JAVAttack extends JPanel implements ActionListener, KeyListener {
                 backgroundMusic.loop(Clip.LOOP_CONTINUOUSLY);
             }
         }
-        else if (e.getKeyCode() == KeyEvent.VK_LEFT && ship.x - shipVelocityX >= 0) {
-            ship.x -= shipVelocityX;
-        }
-        else if(e.getKeyCode() == KeyEvent.VK_RIGHT && ship.x + ship.width + shipVelocityX <= boardWidth){
-            ship.x += shipVelocityX;
-        }
+        // else if (e.getKeyCode() == KeyEvent.VK_LEFT && ship.x - shipVelocityX >= 0) {
+        //     ship.x -= shipVelocityX;
+        // }
+        // else if(e.getKeyCode() == KeyEvent.VK_RIGHT && ship.x + ship.width + shipVelocityX <= boardWidth){
+        //     ship.x += shipVelocityX;
+        // }
         else if(e.getKeyCode() == KeyEvent.VK_SPACE &&  System.currentTimeMillis() - shootBuffer > bufferTime){
             Block bullet  = new Block(ship.x + shipWidth*15/32, ship.y, bulletWidth, bulletHeight, null);
             bulletArray.add(bullet);
