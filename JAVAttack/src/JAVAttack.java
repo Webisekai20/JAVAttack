@@ -295,12 +295,12 @@ public class JAVAttack extends JPanel implements ActionListener, KeyListener {
 
     private void moveShip(){
         if(left || right){
-        if (left && ship.x - shipVelocityX >= 0) {
-            ship.x -= shipVelocityX;
-        }
-        if(right && ship.x + ship.width + shipVelocityX <= boardWidth){
-            ship.x += shipVelocityX;
-        }
+            if (left && ship.x - shipVelocityX >= 5) {
+                ship.x -= shipVelocityX;
+            }
+            if(right && ship.x + ship.width + shipVelocityX <= boardWidth - 5){
+                ship.x += shipVelocityX;
+            }   
         }
     }
 
