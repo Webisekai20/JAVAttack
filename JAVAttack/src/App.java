@@ -3,6 +3,7 @@ import java.util.jar.JarEntry;
 import javax.swing.*;
 
 
+
 public class App {
     public static void main(String[] args) throws Exception {
         int tileSize  =32;
@@ -10,6 +11,7 @@ public class App {
         int columns = 16;
         int boardWidth = tileSize * columns;
         int boardHeight = tileSize * rows;
+       
 
         JFrame frame = new JFrame("JAVAttack");
         frame.setVisible(true);
@@ -23,7 +25,5 @@ public class App {
         frame.pack();
         javAttack.requestFocus();
         frame.setVisible(true);
-
-
     }
 }

@@ -4,6 +4,10 @@ import java.awt.print.Book;
 import java.util.ArrayList;
 import java.util.Random;
 import javax.swing.*;
+import javax.sound.sampled.AudioInputStream;
+import javax.sound.sampled.AudioSystem;
+import javax.sound.sampled.Clip;
+
 
 public class JAVAttack extends JPanel implements ActionListener, KeyListener {
     class Block{
@@ -71,6 +75,11 @@ public class JAVAttack extends JPanel implements ActionListener, KeyListener {
     int score = 0;
     int level = 1;
     boolean gameOver = false; 
+      
+    // Background music
+    Clip backgroundMusic;
+      // Bullet sound
+    Clip bulletSound;
 
     JAVAttack(){
         setPreferredSize(new Dimension(boardHeight, boardWidth));
@@ -93,7 +102,26 @@ public class JAVAttack extends JPanel implements ActionListener, KeyListener {
         ship = new Block(shipX, shipY, shipWidth, shipHeight, shipImg);
         alienArray = new ArrayList<Block>();
         bulletArray = new ArrayList<Block>();
+        
+         // Load and start background music
+        try {
+            AudioInputStream audioInputStream = AudioSystem.getAudioInputStream(getClass().getResource("/retro.wav"));
+            backgroundMusic = AudioSystem.getClip();
+            backgroundMusic.open(audioInputStream);
+            backgroundMusic.loop(Clip.LOOP_CONTINUOUSLY);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
 
+        //         // Load bullet sound
+        // try {
+        //     AudioInputStream bulletAudioInputStream = AudioSystem.getAudioInputStream(getClass().getResource("/bullet.wav"));
+        //     bulletSound = AudioSystem.getClip();
+        //     bulletSound.open(bulletAudioInputStream);
+        // } catch (Exception e) {
+        //     e.printStackTrace();
+        // }
+     
         // game timer
         gameLoop = new Timer(1000/60, this);
         createAliens();
@@ -126,6 +154,7 @@ public class JAVAttack extends JPanel implements ActionListener, KeyListener {
                 g.fillRect(bullet.x, bullet.y, bullet.width, bullet.height);
             }
         }
+
 
         // score
         g.setColor(Color.ORANGE);
@@ -223,11 +252,15 @@ public class JAVAttack extends JPanel implements ActionListener, KeyListener {
 
     @Override
     public void actionPerformed(ActionEvent e) {
-        move();
+       move();
         repaint();
         if(gameOver){
             gameLoop.stop();
+            if (backgroundMusic != null) {
+                backgroundMusic.stop();
+            }
         }
+           
     }
 
     @Override
@@ -239,6 +272,7 @@ public class JAVAttack extends JPanel implements ActionListener, KeyListener {
     @Override
     public void keyReleased(KeyEvent e) {
         if(gameOver){
+
             ship.x = shipX;
             alienArray.clear();
             bulletArray.clear();
@@ -250,6 +284,9 @@ public class JAVAttack extends JPanel implements ActionListener, KeyListener {
             gameOver = false;
             createAliens();
             gameLoop.start();
+            if (backgroundMusic != null) {
+                backgroundMusic.loop(Clip.LOOP_CONTINUOUSLY);
+            }
         }
         else if (e.getKeyCode() == KeyEvent.VK_LEFT && ship.x - shipVelocityX >= 0) {
             ship.x -= shipVelocityX;
@@ -260,6 +297,11 @@ public class JAVAttack extends JPanel implements ActionListener, KeyListener {
         else if(e.getKeyCode() == KeyEvent.VK_SPACE){
             Block bullet  = new Block(ship.x + shipWidth*15/32, ship.y, bulletWidth, bulletHeight, null);
             bulletArray.add(bullet);
+                // Play bullet sound
+            // if (bulletSound != null) {
+            //     bulletSound.setFramePosition(0);
+            //     bulletSound.start();
+            // }
         }
     }
 }
