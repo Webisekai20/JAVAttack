@@ -41,6 +41,8 @@ public class JAVAttack extends JPanel implements ActionListener, KeyListener {
     int boardWidth = tileSize * columns;
     int boardHeight = tileSize * rows;
 
+    ImageIcon bgImg;
+    Image background;
     Image shipImg;
     Image alienImg;
     Image alienCyanImg;
@@ -85,7 +87,9 @@ public class JAVAttack extends JPanel implements ActionListener, KeyListener {
     int bulletHeight = tileSize/2;
     int bulletVelocityY = -7;// moving speed
 
-
+    boolean gameStarted = false;
+    long startTime = 0;
+    long elapsedTime = 0;
     Timer gameLoop;  
     int score = 0;
     int level = 1;
@@ -102,6 +106,8 @@ public class JAVAttack extends JPanel implements ActionListener, KeyListener {
         setFocusable(true);
         addKeyListener(this);
 
+        bgImg = new ImageIcon(getClass().getResource("/StarryBg.gif"));
+        background = bgImg.getImage();
         shipImg = new ImageIcon(getClass().getResource("/ship.png")).getImage();
         alienImg = new ImageIcon(getClass().getResource("/alien.png")).getImage();
         alienCyanImg = new ImageIcon(getClass().getResource("/alien-cyan.png")).getImage();
@@ -141,7 +147,6 @@ public class JAVAttack extends JPanel implements ActionListener, KeyListener {
         // game timer
         gameLoop = new Timer(1000/60, this);
         createAliens();
-        gameLoop.start();
     }
 
     public void paintComponent(Graphics g){
@@ -150,6 +155,25 @@ public class JAVAttack extends JPanel implements ActionListener, KeyListener {
     }
 
     public void draw (Graphics g){
+        //start
+        g.drawImage(background, 0, 0, boardWidth, boardHeight, this);
+        Graphics2D g2d = (Graphics2D) g;
+
+        // black overlay
+        if (gameOver || !gameStarted) {
+            g2d.setColor(new Color(0, 0, 0, 160));
+            g2d.fillRect(0, 0, boardWidth, boardHeight);
+        }
+        g2d.setColor(new Color(0, 0, 0, 160));
+        g2d.fillRect(0, 0, boardWidth, boardHeight);
+
+        g.setColor(Color.WHITE);
+        g.setFont(new Font("Arial", Font.ITALIC, 20));
+
+        if (!gameStarted) {
+            g.drawString("Press Any Key to Start", boardWidth/2-103, boardHeight/2);
+        }
+
         //ship
         g.drawImage(ship.img, ship.x, ship.y, ship.width, ship.height, null);  
 
@@ -181,13 +205,20 @@ public class JAVAttack extends JPanel implements ActionListener, KeyListener {
 
 
         // score
-        g.setColor(Color.ORANGE);
-        g.setFont(new Font("Arial", Font.PLAIN, 32));
+        g.setColor(Color.WHITE);
+        g.setFont(new Font("Arial", Font.PLAIN, 20));
         if(gameOver){
-            g.drawString("Game Over: " + String.valueOf(score),10, 35);
+            g2d.setFont(new Font("Arial", Font.BOLD, 40));
+            g2d.drawString("GAME OVER!", boardWidth/2 - 125, boardHeight/2-40);
+            g2d.setFont(new Font("Arial", Font.ITALIC, 20));
+            g2d.drawString("Total Score: " + String.valueOf(score),boardWidth/2 - 65, boardHeight/2);
+            g2d.setFont(new Font("Arial", Font.PLAIN, 10));
+            g.drawString("Press Any Key to Start", boardWidth/2-55, boardHeight/2+80);
         }
-        else{
-            g.drawString(String.valueOf(score), 10, 35);
+        else if (gameStarted){
+            g.drawString("Score: " + String.valueOf(score), 10, 30);
+            g.setFont(new Font("Arial", Font.ITALIC, 15));
+            g.drawString("Level: " + level, 10, 50);
         }
 
     }
@@ -330,6 +361,17 @@ public class JAVAttack extends JPanel implements ActionListener, KeyListener {
 
     @Override
     public void keyPressed(KeyEvent e) {
+        if (!gameStarted) {
+        gameStarted = true;
+        startTime = System.currentTimeMillis();
+        gameLoop.start();
+
+        if (backgroundMusic != null) {
+            backgroundMusic.loop(Clip.LOOP_CONTINUOUSLY);
+        }
+        
+    }
+
         if (e.getKeyCode() == KeyEvent.VK_LEFT && ship.x - shipVelocityX >= 0) {
             left = true;
         }
