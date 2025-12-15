@@ -28,67 +28,89 @@ public class JAVAttack extends JPanel implements ActionListener, KeyListener {
 
     class ActivePowerup{
         PowerupType aType;
-        long startTime;
-        boolean isActive;
+        private long startTime;
+        private boolean isActive;
 
         ActivePowerup(PowerupType aType, long startTime, boolean isActive){
             this.aType = aType;
             this.startTime = startTime;
             this.isActive = isActive;
         }
+
+        public void setStartTime(long startTime){
+            this.startTime = startTime;
+        }
+        public void setIsActive(boolean isActive){
+            this.isActive = isActive;
+        }
+
+        // public long getStartTime() {
+        //     return startTime;
+        // }
     }
 
 
     class Block{
-        int x;
-        int y;
-        int width;
-        int height;
-        Image img;
-        boolean alive = true;// aliens
-        boolean used = false; // bullets
-        
-        PowerupType type; // powerup
-        
-        Block(int x, int y,  int width, int height, Image img){
+        private int x;
+        private int y;
+        private int width;
+        private int height;
+        private Image img;
+        private boolean alive = true;   // for aliens
+        private boolean used = false;   // for bullets
+        private PowerupType type;       // for powerups
+
+        //setters
+        Block(int x, int y, int width, int height, Image img) {
             this.x = x;
             this.y = y;
             this.width = width;
             this.height = height;
             this.img = img;
         }
+
+        // getters 
+        int getX() { return x; }
+        int getY() { return y; }
+        int getWidth() { return width; }
+        int getHeight() { return height; }
+        Image getImg() { return img; }
+        boolean isAlive() { return alive; }
+        boolean isUsed() { return used; }
+        PowerupType getType() { return type; }
+
     }
 
 
     //board
-    int tileSize = 32;
-    int rows = 16;
-    int columns = 16;
-    int boardWidth = tileSize * columns;
-    int boardHeight = tileSize * rows;
+    final int tileSize = 32;
+    final int rows = 16;
+    final int columns = 16;
+    final int boardWidth = tileSize * columns;
+    final int boardHeight = tileSize * rows;
 
-    ImageIcon bgImg;
-    Image background;
-    Image shipImg;
-    Image alienImg;
-    Image alienCyanImg;
-    Image alienMagentaImg;
-    Image alienYellowImg;
+    private final ImageIcon bgImg;
+    private final Image background;
+    private final Image shipImg;
+    private final Image alienImg;
+    private final Image alienCyanImg;
+    private final Image alienMagentaImg;
+    private final Image alienYellowImg;
     ArrayList<Image> alienImgArray;
 
-    BufferedImage powerup0Img = null;
-    BufferedImage powerup1Img = null;
-    BufferedImage powerup2Img = null;
-    BufferedImage powerup3Img = null;
+    private BufferedImage powerup0Img = null;
+    private BufferedImage powerup1Img = null;
+    private BufferedImage powerup2Img = null;
+    private BufferedImage powerup3Img = null;
     ArrayList<BufferedImage> powerupImgArray;
 
 
     // powerups
     ArrayList<Block> powerupArray;
-    int powerWidth = tileSize*2;
-    int powerHeight = tileSize;
-    int powerX = tileSize*columns/2 - tileSize;
-    int powerY = boardHeight - tileSize*2;
+    final int powerWidth = tileSize*2;
+    final int powerHeight = tileSize;
+    final int powerX = tileSize*columns/2 - tileSize;
+    final int powerY = boardHeight - tileSize*2;
 
     int powerVelocity = 0; // speed boost | 0
     int attackSize = 0; // attack size | 1
@@ -99,6 +121,12 @@ public class JAVAttack extends JPanel implements ActionListener, KeyListener {
     ArrayList<ActivePowerup> activePowerupsArr;
     long powerupStartTime;
     final long POWERUP_DURATION = 15000;
+    private long getRemainingTimeMs(ActivePowerup ap) {
+    long now = System.currentTimeMillis();
+    long elapsed = now - ap.startTime;        // use getter if you added it
+    long remaining = POWERUP_DURATION - elapsed;
+    return Math.max(remaining, 0);
+}
 
 
     //shooting mechanics
@@ -159,17 +187,17 @@ public class JAVAttack extends JPanel implements ActionListener, KeyListener {
       
 
     // Background music
-    Clip backgroundMusic;
+    private Clip backgroundMusic;
     // boss music
-    Clip bossBackgroundMusic;
+    private Clip bossBackgroundMusic;
       // Bullet sound
-    Clip bulletSound;
+    private Clip bulletSound;
       // alien death sound
-    Clip deadSound;
+    private Clip deadSound;
        // ship got hit sound effect
-    Clip gameOverSound;
+    private Clip gameOverSound;
        // ship got hit sound effect
-    Clip newLevelSound;
+    private Clip newLevelSound;
     
 
     JAVAttack(){
@@ -208,16 +236,16 @@ public class JAVAttack extends JPanel implements ActionListener, KeyListener {
         powerupImgArray.add(powerup2Img);
         powerupImgArray.add(powerup3Img);
 
+        //polymorphism
         ship = new Block(shipX, shipY, shipWidth, shipHeight, shipImg);
         alienArray = new ArrayList<Block>();
         bulletArray = new ArrayList<Block>();
         alienBullets = new ArrayList<Block>();
         powerupArray = new ArrayList<Block>();
         activePowerupsArr = new ArrayList<ActivePowerup>();
-        
-
-        //  Load background music
+         
         try {
+            //  Load main background music
             AudioInputStream audioInputStream = AudioSystem.getAudioInputStream(getClass().getResource("/assets/music/console.wav"));
             backgroundMusic = AudioSystem.getClip();
             backgroundMusic.open(audioInputStream);
@@ -228,68 +256,45 @@ public class JAVAttack extends JPanel implements ActionListener, KeyListener {
             // Range is usually from -80.0 (mute) to 6.0 (max boost)
             backgroundVolumeControl.setValue(-10.0f); // Example: reduce volume
 
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-         //  Load boss background music
-        try {
-            AudioInputStream audioInputStream = AudioSystem.getAudioInputStream(getClass().getResource("/assets/music/chad.wav"));
+            //  Load boss background music
+            AudioInputStream boss = AudioSystem.getAudioInputStream(getClass().getResource("/assets/music/chad.wav"));
             bossBackgroundMusic = AudioSystem.getClip();
-            bossBackgroundMusic.open(audioInputStream);
+            bossBackgroundMusic.open(boss);
             FloatControl bossBackgroundVolumeControl = (FloatControl) bossBackgroundMusic.getControl(FloatControl.Type.MASTER_GAIN);
-
             bossBackgroundVolumeControl.setValue(0f); 
 
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-
-                // Load bullet sound
-        try {
-            AudioInputStream bulletAudioInputStream = AudioSystem.getAudioInputStream(getClass().getResource("/assets/effects/shootShip2.wav"));
+            // Load bullet sound
+            AudioInputStream bullet = AudioSystem.getAudioInputStream(getClass().getResource("/assets/effects/shootShip2.wav"));
             bulletSound = AudioSystem.getClip();
-            bulletSound.open(bulletAudioInputStream);
-
+            bulletSound.open(bullet);
             FloatControl bulletvolumeControl = (FloatControl) bulletSound.getControl(FloatControl.Type.MASTER_GAIN);
             bulletvolumeControl.setValue(-5.0f); 
 
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-
             // Load alien death sound effect
-        try {
-            AudioInputStream bulletAudioInputStream = AudioSystem.getAudioInputStream(getClass().getResource("/assets/effects/destroyAlien2.wav"));
+            AudioInputStream alien = AudioSystem.getAudioInputStream(getClass().getResource("/assets/effects/destroyAlien2.wav"));
             deadSound = AudioSystem.getClip();
-            deadSound.open(bulletAudioInputStream);
-            
+            deadSound.open(alien);
             FloatControl deathvolumeControl = (FloatControl) deadSound.getControl(FloatControl.Type.MASTER_GAIN);
             deathvolumeControl.setValue(0f);
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-             // Load alien death sound effect
-        try {
+
+             // Load game over sound effect
             AudioInputStream bulletAudioInputStream = AudioSystem.getAudioInputStream(getClass().getResource("/assets/effects/destroyAlien.wav"));
             gameOverSound = AudioSystem.getClip();
             gameOverSound.open(bulletAudioInputStream);
-            
             FloatControl overVolumeControl = (FloatControl) gameOverSound.getControl(FloatControl.Type.MASTER_GAIN);
             overVolumeControl.setValue(0f);
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-                // Load new Level sound effect
-        try {
-            AudioInputStream bulletAudioInputStream = AudioSystem.getAudioInputStream(getClass().getResource("/assets/effects/newLevel.wav"));
+
+            // Load new Level sound effect
+            AudioInputStream newLevel = AudioSystem.getAudioInputStream(getClass().getResource("/assets/effects/newLevel.wav"));
             newLevelSound = AudioSystem.getClip();
-            newLevelSound.open(bulletAudioInputStream);
-            
+            newLevelSound.open(newLevel);
             FloatControl newLevelVolumeControl = (FloatControl) newLevelSound.getControl(FloatControl.Type.MASTER_GAIN);
             newLevelVolumeControl.setValue(-2.0f);
         } catch (Exception e) {
             e.printStackTrace();
         }
+         
+
      
         // game timer
         gameLoop = new Timer(1000/60, this);
@@ -352,6 +357,32 @@ public class JAVAttack extends JPanel implements ActionListener, KeyListener {
         for (int i = 0; i < powerupArray.size(); i++) {
             Block p = powerupArray.get(i);
             g.drawImage(p.img, p.x, p.y, p.width, p.height, null);
+        }
+        g.setColor(Color.WHITE);
+        g.setFont(new Font("Arial", Font.PLAIN, 14));
+
+        int textY = 70;          // start below the level text
+        int lineStep = 16;       // vertical spacing
+
+        for (int ndx = 0; ndx < activePowerupsArr.size(); ndx++) {
+            ActivePowerup ap = activePowerupsArr.get(ndx);
+            if (!ap.isActive) continue;
+
+            long remainingMs = getRemainingTimeMs(ap);
+            if (remainingMs <= 0) continue;        // do NOT draw if timer hit 0
+            int seconds = (int)(remainingMs / 1000);
+            
+
+            String label = "";
+               switch (ap.aType) {
+                case POWERUP0: label = "Bullet Speed"; break;
+                case POWERUP1: label = "Attack Size";  break;
+                case POWERUP2: label = "Score Boost";  break;
+                case POWERUP3: label = "Attack Speed"; break;
+            }
+
+            g.drawString(label + ": " + seconds + "s", 10, textY);
+            textY += lineStep;
         }
 
         // score
@@ -446,15 +477,14 @@ public class JAVAttack extends JPanel implements ActionListener, KeyListener {
             bullet.y += -bulletVelocityY;
 
             // bullet collision with aliens
-                if(detectCollision(bullet, ship)){
-                    bullet.used = true;
-                    gameOver = true;
-                     if (gameOverSound != null) {
-                        gameOverSound.setFramePosition(0);
-                        gameOverSound.start();
-                    }
+            if(detectCollision(bullet, ship)){
+                bullet.used = true;
+                gameOver = true;
+                    if (gameOverSound != null) {
+                    gameOverSound.setFramePosition(0);
+                    gameOverSound.start();
                 }
-            
+            }
         }
         // powerups
         for (int i = 0; i < powerupArray.size(); i++){
@@ -473,12 +503,18 @@ public class JAVAttack extends JPanel implements ActionListener, KeyListener {
                 powerupArray.remove(i);
                 i--;
             }
-            for(int ndx = 0; ndx < 4; ndx++){
-                if(activePowerupsArr.get(ndx).isActive && System.currentTimeMillis() - activePowerupsArr.get(ndx).startTime > POWERUP_DURATION){
+            // for(int ndx = 0; ndx < 4; ndx++){
+            //     if(activePowerupsArr.get(ndx).isActive && System.currentTimeMillis() - activePowerupsArr.get(ndx).startTime > POWERUP_DURATION){
+            //         deactivatePowerup(ndx);
+            //     }
+            // }
+            for (int ndx = 0; ndx < 4; ndx++) {
+                ActivePowerup ap = activePowerupsArr.get(ndx);
+                if (ap.isActive && getRemainingTimeMs(ap) == 0) {
                     deactivatePowerup(ndx);
                 }
             }
-            
+
         }
 
         //populate activePowerupsArr
@@ -519,9 +555,10 @@ public class JAVAttack extends JPanel implements ActionListener, KeyListener {
                     newLevelSound.setFramePosition(0);
                     newLevelSound.start();
                 }
-                if (level > 6) {
+                if (level > 5) {
                     bossBackgroundMusic.stop();
-                    backgroundMusic.start();
+                    backgroundMusic.loop(Clip.LOOP_CONTINUOUSLY);
+                    // backgroundMusic.start();
                 }
                 
             }

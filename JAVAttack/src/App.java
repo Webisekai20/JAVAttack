@@ -6,11 +6,11 @@ import javax.swing.*;
 
 public class App {
     public static void main(String[] args) throws Exception {
-        int tileSize  =32;
-        int rows = 16;
-        int columns = 16;
-        int boardWidth = tileSize * columns;
-        int boardHeight = tileSize * rows;
+        final int tileSize  =32;
+        final int rows = 16;
+        final int columns = 16;
+        final int boardWidth = tileSize * columns;
+        final int boardHeight = tileSize * rows;
        
 
         JFrame frame = new JFrame("JAVAttack");
