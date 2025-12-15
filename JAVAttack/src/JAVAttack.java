@@ -99,6 +99,12 @@ public class JAVAttack extends JPanel implements ActionListener, KeyListener {
     Clip backgroundMusic;
       // Bullet sound
     Clip bulletSound;
+      // alien death sound
+    Clip deadSound;
+       // ship got hit sound effect
+    Clip gameOverSound;
+       // ship got hit sound effect
+    Clip newLevelSound;
 
     JAVAttack(){
         setPreferredSize(new Dimension(boardHeight, boardWidth));
@@ -125,24 +131,48 @@ public class JAVAttack extends JPanel implements ActionListener, KeyListener {
         bulletArray = new ArrayList<Block>();
         alienBullets = new ArrayList<Block>();
         
-         // Load and start background music
+        //  Load and start background music
         try {
-            AudioInputStream audioInputStream = AudioSystem.getAudioInputStream(getClass().getResource("/retro.wav"));
+            AudioInputStream audioInputStream = AudioSystem.getAudioInputStream(getClass().getResource("/console.wav"));
             backgroundMusic = AudioSystem.getClip();
             backgroundMusic.open(audioInputStream);
-            backgroundMusic.loop(Clip.LOOP_CONTINUOUSLY);
+            //backgroundMusic.loop(Clip.LOOP_CONTINUOUSLY);
         } catch (Exception e) {
             e.printStackTrace();
         }
 
-        //         // Load bullet sound
-        // try {
-        //     AudioInputStream bulletAudioInputStream = AudioSystem.getAudioInputStream(getClass().getResource("/bullet.wav"));
-        //     bulletSound = AudioSystem.getClip();
-        //     bulletSound.open(bulletAudioInputStream);
-        // } catch (Exception e) {
-        //     e.printStackTrace();
-        // }
+                // Load bullet sound
+        try {
+            AudioInputStream bulletAudioInputStream = AudioSystem.getAudioInputStream(getClass().getResource("/shootShip2.wav"));
+            bulletSound = AudioSystem.getClip();
+            bulletSound.open(bulletAudioInputStream);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+            // Load alien death sound effect
+        try {
+            AudioInputStream bulletAudioInputStream = AudioSystem.getAudioInputStream(getClass().getResource("/destroyAlien2.wav"));
+            deadSound = AudioSystem.getClip();
+            deadSound.open(bulletAudioInputStream);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+             // Load alien death sound effect
+        try {
+            AudioInputStream bulletAudioInputStream = AudioSystem.getAudioInputStream(getClass().getResource("/destroyAlien.wav"));
+            gameOverSound = AudioSystem.getClip();
+            gameOverSound.open(bulletAudioInputStream);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        try {
+            AudioInputStream bulletAudioInputStream = AudioSystem.getAudioInputStream(getClass().getResource("/newLevel.wav"));
+            newLevelSound = AudioSystem.getClip();
+            newLevelSound.open(bulletAudioInputStream);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
      
         // game timer
         gameLoop = new Timer(1000/60, this);
@@ -265,6 +295,10 @@ public class JAVAttack extends JPanel implements ActionListener, KeyListener {
                     alien.alive = false;
                     alienCount--;
                     score += 50*level; 
+                    if (deadSound != null) {
+                        deadSound.setFramePosition(0);
+                        deadSound.start();
+                    }
                 }
             }
         }
@@ -277,6 +311,10 @@ public class JAVAttack extends JPanel implements ActionListener, KeyListener {
                 if(detectCollision(bullet, ship)){
                     bullet.used = true;
                     gameOver = true;
+                     if (gameOverSound != null) {
+                        gameOverSound.setFramePosition(0);
+                        gameOverSound.start();
+                    }
                 }
             
         }
@@ -302,6 +340,10 @@ public class JAVAttack extends JPanel implements ActionListener, KeyListener {
             alienBullets.clear();
             alienVelocityX = 4;
             createAliens();
+            if (newLevelSound != null) {
+                newLevelSound.setFramePosition(0);
+                newLevelSound.start();
+            }
         }
     }
 
@@ -353,7 +395,6 @@ public class JAVAttack extends JPanel implements ActionListener, KeyListener {
                 backgroundMusic.stop();
             }
         }
-           
     }
 
     @Override
@@ -378,7 +419,13 @@ public class JAVAttack extends JPanel implements ActionListener, KeyListener {
         if(e.getKeyCode() == KeyEvent.VK_RIGHT && ship.x + ship.width + shipVelocityX <= boardWidth){
             right = true;
         }
+        // else if(e.getKeyCode() == KeyEvent.VK_SPACE){
+          
+        // }
     }
+
+
+        
 
     @Override
     public void keyReleased(KeyEvent e) {
@@ -403,6 +450,7 @@ public class JAVAttack extends JPanel implements ActionListener, KeyListener {
             createAliens();
             gameLoop.start();
             if (backgroundMusic != null) {
+                backgroundMusic.setFramePosition(0);
                 backgroundMusic.loop(Clip.LOOP_CONTINUOUSLY);
             }
         }
@@ -416,28 +464,29 @@ public class JAVAttack extends JPanel implements ActionListener, KeyListener {
             Block bullet  = new Block(ship.x + shipWidth*15/32, ship.y, bulletWidth, bulletHeight, null);
             bulletArray.add(bullet);
             shootBuffer = System.currentTimeMillis();
+               //   Play bullet sound
+            if (bulletSound != null) {
+                bulletSound.setFramePosition(0);
+                bulletSound.start();
+           }
 
-            try {
-                File soundFile = new File("shootShip.wav");
-                AudioInputStream audioIn = AudioSystem.getAudioInputStream(soundFile);
-                Clip clip = AudioSystem.getClip();
-                //FloatControl volume = (FloatControl) clip.getControl(FloatControl.Type.MASTER_GAIN);
-                //volume.setValue(-10.0f);
-                clip.open(audioIn);
-                clip.start();
-            } catch (UnsupportedAudioFileException except) {
-                except.printStackTrace();
-            } catch (IOException except) {
-                except.printStackTrace();
-            } catch (LineUnavailableException except) {
-                except.printStackTrace();
-}
+//             try {
+//                 File soundFile = new File("shootShip.wav");
+//                 AudioInputStream audioIn = AudioSystem.getAudioInputStream(soundFile);
+//                 Clip clip = AudioSystem.getClip();
+//                 //FloatControl volume = (FloatControl) clip.getControl(FloatControl.Type.MASTER_GAIN);
+//                 //volume.setValue(-10.0f);
+//                 clip.open(audioIn);
+//                 clip.start();
+//             } catch (UnsupportedAudioFileException except) {
+//                 except.printStackTrace();
+//             } catch (IOException except) {
+//                 except.printStackTrace();
+//             } catch (LineUnavailableException except) {
+//                 except.printStackTrace();
+// }
 
-                // Play bullet sound
-            // if (bulletSound != null) {
-            //     bulletSound.setFramePosition(0);
-            //     bulletSound.start();
-            // }
+          
         }
     }
-}
+}   
