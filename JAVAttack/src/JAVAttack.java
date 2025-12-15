@@ -393,16 +393,23 @@ public class JAVAttack extends JPanel implements ActionListener, KeyListener {
 
         // boss attack
         if (bossAlive && boss != null) {
+            Random bossBullet = new Random();
+            int targetX = ship.x + ship.width / 2;
+            int fireRate = Math.max(8, 40 - level * 3);
+            int randomX = bossBullet.nextInt(boardWidth - bulletWidth);
             boss.x += bossVelocityX;
 
             if (boss.x <= 0 || boss.x + boss.width >= boardWidth) {
                 bossVelocityX *= -1;
             }
 
-            Random bossBullet = new Random();
-            if (bossBullet.nextInt(40) == 1) {
-                int randomX = bossBullet.nextInt(boardWidth - bulletWidth);
+            if (bossBullet.nextInt(fireRate) == 1) {
+                for (int i = 0; i < boardWidth; i += tileSize * 4) {
+                    alienBullets.add(new Block(i, boss.y + boss.height, bulletWidth, bulletHeight, null));
+                }
+                 
                 alienBullets.add(new Block(randomX, boss.y + boss.height, bulletWidth, bulletHeight, null));
+                alienBullets.add(new Block(targetX, boss.y + boss.height, bulletWidth, bulletHeight, null));
             }
         }
 
