@@ -160,6 +160,8 @@ public class JAVAttack extends JPanel implements ActionListener, KeyListener {
 
     // Background music
     Clip backgroundMusic;
+    // boss music
+    Clip bossBackgroundMusic;
       // Bullet sound
     Clip bulletSound;
       // alien death sound
@@ -193,10 +195,6 @@ public class JAVAttack extends JPanel implements ActionListener, KeyListener {
             e.printStackTrace();
         }
 
-        // powerup0Img = new ImageIcon(getClass().getResource("sniper.png")).getImage();
-        // powerup1Img = new ImageIcon(getClass().getResource("powerup1.png")).getImage();
-        // powerup2Img = new ImageIcon(getClass().getResource("powerup2.png")).getImage();
-        // powerup3Img = new ImageIcon(getClass().getResource("powerup3.png")).getImage();
 
         alienImgArray = new ArrayList<Image>();
         alienImgArray.add(alienImg);
@@ -218,7 +216,7 @@ public class JAVAttack extends JPanel implements ActionListener, KeyListener {
         activePowerupsArr = new ArrayList<ActivePowerup>();
         
 
-        //  Load and start background music
+        //  Load background music
         try {
             AudioInputStream audioInputStream = AudioSystem.getAudioInputStream(getClass().getResource("/assets/music/console.wav"));
             backgroundMusic = AudioSystem.getClip();
@@ -229,6 +227,18 @@ public class JAVAttack extends JPanel implements ActionListener, KeyListener {
             // Set volume (in decibels)
             // Range is usually from -80.0 (mute) to 6.0 (max boost)
             backgroundVolumeControl.setValue(-10.0f); // Example: reduce volume
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+         //  Load boss background music
+        try {
+            AudioInputStream audioInputStream = AudioSystem.getAudioInputStream(getClass().getResource("/assets/music/chad.wav"));
+            bossBackgroundMusic = AudioSystem.getClip();
+            bossBackgroundMusic.open(audioInputStream);
+            FloatControl bossBackgroundVolumeControl = (FloatControl) bossBackgroundMusic.getControl(FloatControl.Type.MASTER_GAIN);
+
+            bossBackgroundVolumeControl.setValue(0f); 
 
         } catch (Exception e) {
             e.printStackTrace();
@@ -489,11 +499,14 @@ public class JAVAttack extends JPanel implements ActionListener, KeyListener {
         // next level
         if(alienCount == 0 && !bossAlive){
             // increase aliens
-            //score += alineColumn *alienRows *100;  no bonus
             level++;
             // if boss level
             if (level % 5 == 0) {
                 createBoss();
+                if (backgroundMusic != null) {
+                    backgroundMusic.stop();
+                    bossBackgroundMusic.start();
+                }
             } else{
                 alineColumn = Math.min(alineColumn +1, columns/2-2);
                 alienRows = Math.min(alienRows+1, rows - 6);
@@ -506,6 +519,11 @@ public class JAVAttack extends JPanel implements ActionListener, KeyListener {
                     newLevelSound.setFramePosition(0);
                     newLevelSound.start();
                 }
+                if (bossBackgroundMusic != null) {
+                    bossBackgroundMusic.stop();
+                    backgroundMusic.start();
+                }
+                
             }
         }
 
@@ -714,9 +732,6 @@ public class JAVAttack extends JPanel implements ActionListener, KeyListener {
         if(e.getKeyCode() == KeyEvent.VK_RIGHT && ship.x + ship.width + shipVelocityX <= boardWidth){
             right = true;
         }
-        // else if(e.getKeyCode() == KeyEvent.VK_SPACE){
-          
-        // }
     }
 
 
