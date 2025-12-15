@@ -428,7 +428,7 @@ public class JAVAttack extends JPanel implements ActionListener, KeyListener {
                     alienCount--;
                     score += 50*level * scoreBoost; 
 
-                    powerupChance = rand.nextInt(10); // 0–19
+                    powerupChance = rand.nextInt(10); // powerup chance
                     if (powerupChance == 0) {
                         createPowerup(alien.x, alien.y);
                     }
@@ -459,7 +459,7 @@ public class JAVAttack extends JPanel implements ActionListener, KeyListener {
         // powerups
         for (int i = 0; i < powerupArray.size(); i++){
             Block p = powerupArray.get(i);
-            if(ship.y < p.y){
+            if(ship.y > p.y){
                 p.y += 4;
             }
 
@@ -474,7 +474,7 @@ public class JAVAttack extends JPanel implements ActionListener, KeyListener {
                 i--;
             }
             for(int ndx = 0; ndx < 4; ndx++){
-                if(System.currentTimeMillis() - activePowerupsArr.get(ndx).startTime > POWERUP_DURATION){
+                if(activePowerupsArr.get(ndx).isActive && System.currentTimeMillis() - activePowerupsArr.get(ndx).startTime > POWERUP_DURATION){
                     deactivatePowerup(ndx);
                 }
             }
@@ -751,6 +751,7 @@ public class JAVAttack extends JPanel implements ActionListener, KeyListener {
             alienArray.clear();
             bulletArray.clear();
             alienBullets.clear();
+            powerupArray.clear();
             boss = null;            
             bossAlive = false;
             score = 0;
