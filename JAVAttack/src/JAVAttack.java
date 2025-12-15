@@ -112,6 +112,7 @@ public class JAVAttack extends JPanel implements ActionListener, KeyListener {
         setFocusable(true);
         addKeyListener(this);
 
+        //load images
         bgImg = new ImageIcon(getClass().getResource("/StarryBg.gif"));
         background = bgImg.getImage();
         shipImg = new ImageIcon(getClass().getResource("/ship.png")).getImage();
@@ -221,6 +222,7 @@ public class JAVAttack extends JPanel implements ActionListener, KeyListener {
             Block bullet = bulletArray.get(i);
             if(!bullet.used){
                 //g.drawRect(bullet.x, bullet.y, bullet.width, bullet.height);
+                g.setColor(Color.GREEN);
                 g.fillRect(bullet.x, bullet.y, bullet.width, bullet.height);
             }
         }
@@ -229,6 +231,7 @@ public class JAVAttack extends JPanel implements ActionListener, KeyListener {
             Block bullet = alienBullets.get(i);
             if(!bullet.used){
                 //g.drawRect(bullet.x, bullet.y, bullet.width, bullet.height);
+                g.setColor(Color.RED);
                 g.fillRect(bullet.x, bullet.y, bullet.width, bullet.height);
             }
         }
