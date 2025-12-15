@@ -703,7 +703,7 @@ public class JAVAttack extends JPanel implements ActionListener, KeyListener {
                 backgroundMusic.loop(Clip.LOOP_CONTINUOUSLY);
             }
         }
-        else if(e.getKeyCode() == KeyEvent.VK_SPACE &&  System.currentTimeMillis() - shootBuffer > bufferTime){
+        else if((e.getKeyCode() == KeyEvent.VK_SPACE || e.getKeyCode() == KeyEvent.VK_UP) &&  System.currentTimeMillis() - shootBuffer > bufferTime){
             Block bullet  = new Block(ship.x + shipWidth*15/32, ship.y, bulletWidth + attackSize, bulletHeight, null);
             bulletArray.add(bullet);
             shootBuffer = System.currentTimeMillis();
