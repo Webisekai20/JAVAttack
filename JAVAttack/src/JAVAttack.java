@@ -16,6 +16,15 @@ import javax.sound.sampled.FloatControl;
 
 
 public class JAVAttack extends JPanel implements ActionListener, KeyListener {
+
+    enum PowerupType{
+        POWERUP0, // bullet speed increase
+        POWERUP1, // attack size increase
+        POWERUP2, // score boost increase
+        POWERUP3 // attack speed increase
+    }
+
+
     class Block{
         int x;
         int y;
@@ -24,6 +33,9 @@ public class JAVAttack extends JPanel implements ActionListener, KeyListener {
         Image img;
         boolean alive = true;// aliens
         boolean used = false; // bullets
+
+        PowerupType type; // powerup
+        long duration; // powerup
         
         Block(int x, int y,  int width, int height, Image img){
             this.x = x;
@@ -50,14 +62,40 @@ public class JAVAttack extends JPanel implements ActionListener, KeyListener {
     Image alienYellowImg;
     ArrayList<Image> alienImgArray;
 
+    Image powerup0Img;
+    Image powerup1Img;
+    Image powerup2Img;
+    Image powerup3Img;
+    ArrayList<Image> powerupImgArray;
+
+
+    // powerups
+    ArrayList<Block> powerupArray;
+    int powerWidth = tileSize;
+    int powerHeight = tileSize/2;
+    int powerX = tileSize*columns/2 - tileSize;
+    int powerY = boardHeight - tileSize*2;
+
+    int powerVelocity = 0; // speed boost | 0
+    int attackSize = 0; // attack size | 1
+    int scoreBoost = 1; // multiplier | 2
+    int bufferTimeBoost = 0; // attack speed boost | 3
+
+    boolean powerupActive = false;
+    PowerupType activePowerup;
+    long powerupStartTime;
+    final long POWERUP_DURATION = 15000;
+
 
     //shooting mechanics
     long shootBuffer = 0;
-    long bufferTime = 500; //in milliseconds
+    long bufferTime = 500 + bufferTimeBoost; //in milliseconds
+
 
     //movement booleans
     boolean left = false;
     boolean right = false;
+
 
     //ship
     int shipWidth = tileSize;  // 64
@@ -67,6 +105,7 @@ public class JAVAttack extends JPanel implements ActionListener, KeyListener {
     int shipVelocityX = tileSize/5;
     
     Block ship;
+
 
     //aliens
     ArrayList<Block> alienArray;
@@ -80,13 +119,16 @@ public class JAVAttack extends JPanel implements ActionListener, KeyListener {
     int alienCount = 0; // num of aliens to defeat
     int alienVelocityX = 4;
 
+
     // bullets
     ArrayList<Block> bulletArray;
     ArrayList<Block> alienBullets;
     int bulletWidth = tileSize/8;
     int bulletHeight = tileSize/2;
-    int bulletVelocityY = -7;// moving speed
+    int bulletVelocityY = -7;// moving speed    
 
+
+    // timer
     boolean gameStarted = false;
     long startTime = 0;
     long elapsedTime = 0;
@@ -95,6 +137,7 @@ public class JAVAttack extends JPanel implements ActionListener, KeyListener {
     int level = 1;
     boolean gameOver = false; 
       
+
     // Background music
     Clip backgroundMusic;
       // Bullet sound
@@ -105,6 +148,7 @@ public class JAVAttack extends JPanel implements ActionListener, KeyListener {
     Clip gameOverSound;
        // ship got hit sound effect
     Clip newLevelSound;
+    
 
     JAVAttack(){
         setPreferredSize(new Dimension(boardHeight, boardWidth));
@@ -120,6 +164,10 @@ public class JAVAttack extends JPanel implements ActionListener, KeyListener {
         alienCyanImg = new ImageIcon(getClass().getResource("/alien-cyan.png")).getImage();
         alienMagentaImg = new ImageIcon(getClass().getResource("/alien-magenta.png")).getImage();
         alienYellowImg = new ImageIcon(getClass().getResource("/alien-yellow.png")).getImage();
+        powerup0Img = new ImageIcon(getClass().getResource("powerup0.jpg")).getImage();
+        powerup1Img = new ImageIcon(getClass().getResource("powerup1.png")).getImage();
+        powerup2Img = new ImageIcon(getClass().getResource("powerup2.png")).getImage();
+        powerup3Img = new ImageIcon(getClass().getResource("powerup3.png")).getImage();
 
         alienImgArray = new ArrayList<Image>();
         alienImgArray.add(alienImg);
@@ -127,11 +175,19 @@ public class JAVAttack extends JPanel implements ActionListener, KeyListener {
         alienImgArray.add(alienMagentaImg);
         alienImgArray.add(alienYellowImg);
 
+        powerupImgArray = new ArrayList<Image>();
+        powerupImgArray.add(powerup0Img);
+        powerupImgArray.add(powerup1Img);
+        powerupImgArray.add(powerup2Img);
+        powerupImgArray.add(powerup3Img);
+
         ship = new Block(shipX, shipY, shipWidth, shipHeight, shipImg);
         alienArray = new ArrayList<Block>();
         bulletArray = new ArrayList<Block>();
         alienBullets = new ArrayList<Block>();
+        powerupArray = new ArrayList<Block>();
         
+
         //  Load and start background music
         try {
             AudioInputStream audioInputStream = AudioSystem.getAudioInputStream(getClass().getResource("/console.wav"));
@@ -237,25 +293,28 @@ public class JAVAttack extends JPanel implements ActionListener, KeyListener {
         }
 
         // bullets
-        g.setColor(Color.LIGHT_GRAY);
+        g.setColor(Color.GREEN);
         for(int i = 0; i < bulletArray.size(); i++){
             Block bullet = bulletArray.get(i);
             if(!bullet.used){
                 //g.drawRect(bullet.x, bullet.y, bullet.width, bullet.height);
-                g.setColor(Color.GREEN);
                 g.fillRect(bullet.x, bullet.y, bullet.width, bullet.height);
             }
         }
-
+        g.setColor(Color.RED);
         for(int i = 0; i < alienBullets.size(); i++){
             Block bullet = alienBullets.get(i);
             if(!bullet.used){
                 //g.drawRect(bullet.x, bullet.y, bullet.width, bullet.height);
-                g.setColor(Color.RED);
                 g.fillRect(bullet.x, bullet.y, bullet.width, bullet.height);
             }
         }
 
+        // powerups
+        for (int i = 0; i < powerupArray.size(); i++) {
+            Block p = powerupArray.get(i);
+            g.drawImage(p.img, p.x, p.y, p.width, p.height, null);
+        }
 
         // score
         g.setColor(Color.WHITE);
@@ -279,6 +338,8 @@ public class JAVAttack extends JPanel implements ActionListener, KeyListener {
     public void move(){
         //aliens
         int random;
+        int powerupChance;
+
         Random rand = new Random();
         for(int i = 0; i < alienArray.size(); i++){
             Block alien = alienArray.get(i);
@@ -308,7 +369,7 @@ public class JAVAttack extends JPanel implements ActionListener, KeyListener {
         //bullets
         for(int i = 0; i < bulletArray.size(); i++ ){
             Block bullet = bulletArray.get(i);
-            bullet.y += bulletVelocityY;
+            bullet.y += bulletVelocityY - powerVelocity;
 
             // bullet collision with aliens
             for(int j = 0; j < alienArray.size(); j++){
@@ -317,7 +378,13 @@ public class JAVAttack extends JPanel implements ActionListener, KeyListener {
                     bullet.used = true;
                     alien.alive = false;
                     alienCount--;
-                    score += 50*level; 
+                    score += 50*level * scoreBoost; 
+
+                    powerupChance = rand.nextInt(20); // 0–19
+                    if (powerupChance == 0) {
+                        createPowerup(alien.x, alien.y);
+                    }
+
                     if (deadSound != null) {
                         deadSound.setFramePosition(0);
                         deadSound.start();
@@ -341,7 +408,29 @@ public class JAVAttack extends JPanel implements ActionListener, KeyListener {
                 }
             
         }
+        // powerups
+        for (int i = 0; i < powerupArray.size(); i++){
+            Block p = powerupArray.get(i);
+            p.y += 2;
 
+            if (detectCollision(p, ship)){
+                activatePowerup(p.type);
+                powerupArray.remove(i);
+                i--;
+                continue;
+
+            }else if (p.y > boardHeight){
+                powerupArray.remove(i);
+                i--;
+            }
+
+            if(powerupActive){
+                if(System.currentTimeMillis() - powerupStartTime > POWERUP_DURATION){
+                    deactivatePowerup();
+                }
+            }
+        }
+    
         // clear out of screen bullets
         while(bulletArray.size() >0 && (bulletArray.get(0).used || bulletArray.get(0).y < 0)){
             bulletArray.remove(0);
@@ -386,6 +475,63 @@ public class JAVAttack extends JPanel implements ActionListener, KeyListener {
             }
         }
         alienCount = alienArray.size();
+    }
+
+    public void activatePowerup(PowerupType type){
+        activePowerup = type;
+        powerupStartTime = System.currentTimeMillis();
+        powerupActive = true;
+
+        switch(type){
+            case POWERUP0:
+                powerVelocity = 4;
+                break;
+            case POWERUP1:
+                attackSize = tileSize;
+                break;
+            case POWERUP2:
+                scoreBoost = 2;
+                break;
+            case POWERUP3:
+                bufferTimeBoost = 200;
+                break;
+        }
+    }
+
+    public void deactivatePowerup(){
+    switch(activePowerup){
+        case POWERUP0:
+                powerVelocity = 0;
+                break;
+            case POWERUP1:
+                attackSize = 0;
+                break;
+            case POWERUP2:
+                scoreBoost = 1;
+                break;
+            case POWERUP3:
+                bufferTimeBoost = 0;
+                break;
+        }
+        powerupActive = false;
+    }
+
+
+    public void createPowerup(int x, int y){
+        Random random = new Random();
+        int index = random.nextInt(powerupImgArray.size());
+
+        Block powerup = new Block(
+            x,
+            y,
+            powerWidth,
+            powerHeight,
+            powerupImgArray.get(index)
+        );
+        powerup.type = PowerupType.values()[index];
+        powerup.duration = System.currentTimeMillis();
+        
+        powerupArray.add(powerup);
     }
 
     public boolean detectCollision(Block a, Block b){
@@ -484,7 +630,7 @@ public class JAVAttack extends JPanel implements ActionListener, KeyListener {
         //     ship.x += shipVelocityX;
         // }
         else if(e.getKeyCode() == KeyEvent.VK_SPACE &&  System.currentTimeMillis() - shootBuffer > bufferTime){
-            Block bullet  = new Block(ship.x + shipWidth*15/32, ship.y, bulletWidth, bulletHeight, null);
+            Block bullet  = new Block(ship.x + shipWidth*15/32, ship.y, bulletWidth + attackSize, bulletHeight, null);
             bulletArray.add(bullet);
             shootBuffer = System.currentTimeMillis();
                //   Play bullet sound
