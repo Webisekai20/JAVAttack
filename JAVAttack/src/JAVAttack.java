@@ -136,7 +136,13 @@ public class JAVAttack extends JPanel implements ActionListener, KeyListener {
             AudioInputStream audioInputStream = AudioSystem.getAudioInputStream(getClass().getResource("/console.wav"));
             backgroundMusic = AudioSystem.getClip();
             backgroundMusic.open(audioInputStream);
-            //backgroundMusic.loop(Clip.LOOP_CONTINUOUSLY);
+             // Get the volume control from the clip
+            FloatControl backgroundVolumeControl = (FloatControl) backgroundMusic.getControl(FloatControl.Type.MASTER_GAIN);
+
+            // Set volume (in decibels)
+            // Range is usually from -80.0 (mute) to 6.0 (max boost)
+            backgroundVolumeControl.setValue(-10.0f); // Example: reduce volume
+
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -146,6 +152,10 @@ public class JAVAttack extends JPanel implements ActionListener, KeyListener {
             AudioInputStream bulletAudioInputStream = AudioSystem.getAudioInputStream(getClass().getResource("/shootShip2.wav"));
             bulletSound = AudioSystem.getClip();
             bulletSound.open(bulletAudioInputStream);
+
+            FloatControl bulletvolumeControl = (FloatControl) bulletSound.getControl(FloatControl.Type.MASTER_GAIN);
+            bulletvolumeControl.setValue(-5.0f); 
+
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -155,6 +165,9 @@ public class JAVAttack extends JPanel implements ActionListener, KeyListener {
             AudioInputStream bulletAudioInputStream = AudioSystem.getAudioInputStream(getClass().getResource("/destroyAlien2.wav"));
             deadSound = AudioSystem.getClip();
             deadSound.open(bulletAudioInputStream);
+            
+            FloatControl deathvolumeControl = (FloatControl) deadSound.getControl(FloatControl.Type.MASTER_GAIN);
+            deathvolumeControl.setValue(0f);
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -163,13 +176,20 @@ public class JAVAttack extends JPanel implements ActionListener, KeyListener {
             AudioInputStream bulletAudioInputStream = AudioSystem.getAudioInputStream(getClass().getResource("/destroyAlien.wav"));
             gameOverSound = AudioSystem.getClip();
             gameOverSound.open(bulletAudioInputStream);
+            
+            FloatControl overVolumeControl = (FloatControl) gameOverSound.getControl(FloatControl.Type.MASTER_GAIN);
+            overVolumeControl.setValue(0f);
         } catch (Exception e) {
             e.printStackTrace();
         }
+                // Load new Level sound effect
         try {
             AudioInputStream bulletAudioInputStream = AudioSystem.getAudioInputStream(getClass().getResource("/newLevel.wav"));
             newLevelSound = AudioSystem.getClip();
             newLevelSound.open(bulletAudioInputStream);
+            
+            FloatControl newLevelVolumeControl = (FloatControl) newLevelSound.getControl(FloatControl.Type.MASTER_GAIN);
+            newLevelVolumeControl.setValue(-2.0f);
         } catch (Exception e) {
             e.printStackTrace();
         }
