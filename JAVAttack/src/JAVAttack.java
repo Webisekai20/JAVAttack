@@ -1,10 +1,12 @@
 import java.awt.*;
 import java.awt.event.*;
+import java.awt.image.BufferedImage;
 import java.awt.print.Book;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Random;
 import javax.swing.*;
+import javax.imageio.ImageIO;
 import javax.sound.sampled.AudioInputStream;
 import javax.sound.sampled.AudioSystem;
 import javax.sound.sampled.Clip;
@@ -74,11 +76,11 @@ public class JAVAttack extends JPanel implements ActionListener, KeyListener {
     Image alienYellowImg;
     ArrayList<Image> alienImgArray;
 
-    Image powerup0Img;
-    Image powerup1Img;
-    Image powerup2Img;
-    Image powerup3Img;
-    ArrayList<Image> powerupImgArray;
+    BufferedImage powerup0Img = null;
+    BufferedImage powerup1Img = null;
+    BufferedImage powerup2Img = null;
+    BufferedImage powerup3Img = null;
+    ArrayList<BufferedImage> powerupImgArray;
 
 
     // powerups
@@ -175,17 +177,26 @@ public class JAVAttack extends JPanel implements ActionListener, KeyListener {
         addKeyListener(this);
 
         //load images
-        bgImg = new ImageIcon(getClass().getResource("/StarryBg.gif"));
+        bgImg = new ImageIcon(getClass().getResource("/assets/img/StarryBg.gif"));
         background = bgImg.getImage();
-        shipImg = new ImageIcon(getClass().getResource("/ship.png")).getImage();
-        alienImg = new ImageIcon(getClass().getResource("/alien.png")).getImage();
-        alienCyanImg = new ImageIcon(getClass().getResource("/alien-cyan.png")).getImage();
-        alienMagentaImg = new ImageIcon(getClass().getResource("/alien-magenta.png")).getImage();
-        alienYellowImg = new ImageIcon(getClass().getResource("/alien-yellow.png")).getImage();
-        powerup0Img = new ImageIcon(getClass().getResource("powerup0.jpg")).getImage();
-        powerup1Img = new ImageIcon(getClass().getResource("powerup1.png")).getImage();
-        powerup2Img = new ImageIcon(getClass().getResource("powerup2.png")).getImage();
-        powerup3Img = new ImageIcon(getClass().getResource("powerup3.png")).getImage();
+        shipImg = new ImageIcon(getClass().getResource("/assets/img/ship.png")).getImage();
+        alienImg = new ImageIcon(getClass().getResource("/assets/img/alien.png")).getImage();
+        alienCyanImg = new ImageIcon(getClass().getResource("/assets/img/alien-cyan.png")).getImage();
+        alienMagentaImg = new ImageIcon(getClass().getResource("/assets/img/alien-magenta.png")).getImage();
+        alienYellowImg = new ImageIcon(getClass().getResource("/assets/img/alien-yellow.png")).getImage();
+        try {
+            powerup0Img = ImageIO.read(getClass().getResource("/assets/img/sniper.png"));
+            powerup1Img = ImageIO.read(getClass().getResource("/assets/img/lazerGun.png"));
+            powerup2Img = ImageIO.read(getClass().getResource("/assets/img/speedUp.png"));
+            powerup3Img = ImageIO.read(getClass().getResource("/assets/img/machineGun.png"));
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        // powerup0Img = new ImageIcon(getClass().getResource("sniper.png")).getImage();
+        // powerup1Img = new ImageIcon(getClass().getResource("powerup1.png")).getImage();
+        // powerup2Img = new ImageIcon(getClass().getResource("powerup2.png")).getImage();
+        // powerup3Img = new ImageIcon(getClass().getResource("powerup3.png")).getImage();
 
         alienImgArray = new ArrayList<Image>();
         alienImgArray.add(alienImg);
@@ -193,7 +204,7 @@ public class JAVAttack extends JPanel implements ActionListener, KeyListener {
         alienImgArray.add(alienMagentaImg);
         alienImgArray.add(alienYellowImg);
 
-        powerupImgArray = new ArrayList<Image>();
+        powerupImgArray = new ArrayList<BufferedImage>();
         powerupImgArray.add(powerup0Img);
         powerupImgArray.add(powerup1Img);
         powerupImgArray.add(powerup2Img);
@@ -209,7 +220,7 @@ public class JAVAttack extends JPanel implements ActionListener, KeyListener {
 
         //  Load and start background music
         try {
-            AudioInputStream audioInputStream = AudioSystem.getAudioInputStream(getClass().getResource("/console.wav"));
+            AudioInputStream audioInputStream = AudioSystem.getAudioInputStream(getClass().getResource("/assets/music/console.wav"));
             backgroundMusic = AudioSystem.getClip();
             backgroundMusic.open(audioInputStream);
              // Get the volume control from the clip
@@ -225,7 +236,7 @@ public class JAVAttack extends JPanel implements ActionListener, KeyListener {
 
                 // Load bullet sound
         try {
-            AudioInputStream bulletAudioInputStream = AudioSystem.getAudioInputStream(getClass().getResource("/shootShip2.wav"));
+            AudioInputStream bulletAudioInputStream = AudioSystem.getAudioInputStream(getClass().getResource("/assets/effects/shootShip2.wav"));
             bulletSound = AudioSystem.getClip();
             bulletSound.open(bulletAudioInputStream);
 
@@ -238,7 +249,7 @@ public class JAVAttack extends JPanel implements ActionListener, KeyListener {
 
             // Load alien death sound effect
         try {
-            AudioInputStream bulletAudioInputStream = AudioSystem.getAudioInputStream(getClass().getResource("/destroyAlien2.wav"));
+            AudioInputStream bulletAudioInputStream = AudioSystem.getAudioInputStream(getClass().getResource("/assets/effects/destroyAlien2.wav"));
             deadSound = AudioSystem.getClip();
             deadSound.open(bulletAudioInputStream);
             
@@ -249,7 +260,7 @@ public class JAVAttack extends JPanel implements ActionListener, KeyListener {
         }
              // Load alien death sound effect
         try {
-            AudioInputStream bulletAudioInputStream = AudioSystem.getAudioInputStream(getClass().getResource("/destroyAlien.wav"));
+            AudioInputStream bulletAudioInputStream = AudioSystem.getAudioInputStream(getClass().getResource("/assets/effects/destroyAlien.wav"));
             gameOverSound = AudioSystem.getClip();
             gameOverSound.open(bulletAudioInputStream);
             
@@ -260,7 +271,7 @@ public class JAVAttack extends JPanel implements ActionListener, KeyListener {
         }
                 // Load new Level sound effect
         try {
-            AudioInputStream bulletAudioInputStream = AudioSystem.getAudioInputStream(getClass().getResource("/newLevel.wav"));
+            AudioInputStream bulletAudioInputStream = AudioSystem.getAudioInputStream(getClass().getResource("/assets/effects/newLevel.wav"));
             newLevelSound = AudioSystem.getClip();
             newLevelSound.open(bulletAudioInputStream);
             
@@ -316,7 +327,6 @@ public class JAVAttack extends JPanel implements ActionListener, KeyListener {
         for(int i = 0; i < bulletArray.size(); i++){
             Block bullet = bulletArray.get(i);
             if(!bullet.used){
-                //g.drawRect(bullet.x, bullet.y, bullet.width, bullet.height);
                 g.fillRect(bullet.x - offset, bullet.y, bullet.width, bullet.height);
             }
         }
@@ -324,7 +334,6 @@ public class JAVAttack extends JPanel implements ActionListener, KeyListener {
         for(int i = 0; i < alienBullets.size(); i++){
             Block bullet = alienBullets.get(i);
             if(!bullet.used){
-                //g.drawRect(bullet.x, bullet.y, bullet.width, bullet.height);
                 g.fillRect(bullet.x, bullet.y, bullet.width, bullet.height);
             }
         }
@@ -743,7 +752,7 @@ public class JAVAttack extends JPanel implements ActionListener, KeyListener {
                 backgroundMusic.loop(Clip.LOOP_CONTINUOUSLY);
             }
         }
-        else if(e.getKeyCode() == KeyEvent.VK_SPACE &&  System.currentTimeMillis() - shootBuffer > bufferTime){
+        else if((e.getKeyCode() == KeyEvent.VK_SPACE || e.getKeyCode() == KeyEvent.VK_UP) &&  System.currentTimeMillis() - shootBuffer > bufferTime){
             Block bullet  = new Block(ship.x + shipWidth*15/32, ship.y, bulletWidth + attackSize, bulletHeight, null);
             bulletArray.add(bullet);
             shootBuffer = System.currentTimeMillis();
