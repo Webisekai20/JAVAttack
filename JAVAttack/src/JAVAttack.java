@@ -24,6 +24,18 @@ public class JAVAttack extends JPanel implements ActionListener, KeyListener {
         POWERUP3 // attack speed increase
     }
 
+    class ActivePowerup{
+        PowerupType aType;
+        long startTime;
+        boolean isActive;
+
+        ActivePowerup(PowerupType aType, long startTime, boolean isActive){
+            this.aType = aType;
+            this.startTime = startTime;
+            this.isActive = isActive;
+        }
+    }
+
 
     class Block{
         int x;
@@ -33,9 +45,8 @@ public class JAVAttack extends JPanel implements ActionListener, KeyListener {
         Image img;
         boolean alive = true;// aliens
         boolean used = false; // bullets
-
+        
         PowerupType type; // powerup
-        long duration; // powerup
         
         Block(int x, int y,  int width, int height, Image img){
             this.x = x;
@@ -45,6 +56,7 @@ public class JAVAttack extends JPanel implements ActionListener, KeyListener {
             this.img = img;
         }
     }
+
 
     //board
     int tileSize = 32;
@@ -82,8 +94,7 @@ public class JAVAttack extends JPanel implements ActionListener, KeyListener {
     int scoreBoost = 1; // multiplier | 2
     int bufferTimeBoost = 0; // attack speed boost | 3
 
-    boolean powerupActive = false;
-    PowerupType activePowerup;
+    ArrayList<ActivePowerup> activePowerupsArr;
     long powerupStartTime;
     final long POWERUP_DURATION = 15000;
 
@@ -193,6 +204,7 @@ public class JAVAttack extends JPanel implements ActionListener, KeyListener {
         bulletArray = new ArrayList<Block>();
         alienBullets = new ArrayList<Block>();
         powerupArray = new ArrayList<Block>();
+        activePowerupsArr = new ArrayList<ActivePowerup>();
         
 
         //  Load and start background music
@@ -428,7 +440,9 @@ public class JAVAttack extends JPanel implements ActionListener, KeyListener {
         // powerups
         for (int i = 0; i < powerupArray.size(); i++){
             Block p = powerupArray.get(i);
-            p.y += 2;
+            if(ship.y < p.y){
+                p.y += 4;
+            }
 
             if (detectCollision(p, ship)){
                 activatePowerup(p.type);
@@ -440,12 +454,18 @@ public class JAVAttack extends JPanel implements ActionListener, KeyListener {
                 powerupArray.remove(i);
                 i--;
             }
-
-            if(powerupActive){
-                if(System.currentTimeMillis() - powerupStartTime > POWERUP_DURATION){
-                    deactivatePowerup();
+            for(int ndx = 0; ndx < 4; ndx++){
+                if(System.currentTimeMillis() - activePowerupsArr.get(ndx).startTime > POWERUP_DURATION){
+                    deactivatePowerup(ndx);
                 }
             }
+            
+        }
+
+        //populate activePowerupsArr
+        for(PowerupType ndx : PowerupType.values()){
+            ActivePowerup deactivated = new ActivePowerup(ndx, 0, false);
+            activePowerupsArr.add(deactivated);
         }
     
         // clear out of screen bullets
@@ -555,9 +575,24 @@ public class JAVAttack extends JPanel implements ActionListener, KeyListener {
     }
 
     public void activatePowerup(PowerupType type){
-        activePowerup = type;
-        powerupStartTime = System.currentTimeMillis();
-        powerupActive = true;
+        int count = 0;
+        for(PowerupType ndx : PowerupType.values()){
+            if(type == ndx && !activePowerupsArr.get(count).isActive){
+                powerupStartTime = System.currentTimeMillis();
+                boolean powerupActive = true;
+
+                ActivePowerup newPow = new ActivePowerup(
+                    type,
+                    powerupStartTime,
+                    powerupActive
+                );
+                activePowerupsArr.add(count, newPow);
+            }else if(type == ndx && activePowerupsArr.get(count).isActive){
+                activePowerupsArr.get(count).startTime = System.currentTimeMillis();
+            }
+            count++;
+        }
+        
 
         switch(type){
             case POWERUP0:
@@ -576,9 +611,10 @@ public class JAVAttack extends JPanel implements ActionListener, KeyListener {
         }
     }
 
-    public void deactivatePowerup(){
-    switch(activePowerup){
-        case POWERUP0:
+    public void deactivatePowerup(int deact){
+
+        switch(activePowerupsArr.get(deact).aType){
+            case POWERUP0:
                 powerVelocity = 0;
                 break;
             case POWERUP1:
@@ -592,11 +628,12 @@ public class JAVAttack extends JPanel implements ActionListener, KeyListener {
                 bufferTimeBoost = 0;
                 break;
         }
-        powerupActive = false;
+        activePowerupsArr.get(deact).isActive = false;
     }
 
 
     public void createPowerup(int x, int y){
+        int count = 0;
         Random random = new Random();
         int index = random.nextInt(powerupImgArray.size());
 
@@ -608,7 +645,6 @@ public class JAVAttack extends JPanel implements ActionListener, KeyListener {
             powerupImgArray.get(index)
         );
         powerup.type = PowerupType.values()[index];
-        powerup.duration = System.currentTimeMillis();
         
         powerupArray.add(powerup);
     }
@@ -641,6 +677,9 @@ public class JAVAttack extends JPanel implements ActionListener, KeyListener {
             gameLoop.stop();
             if (backgroundMusic != null) {
                 backgroundMusic.stop();
+            }
+            for(int ndx = 0; ndx < activePowerupsArr.size(); ndx++){
+                deactivatePowerup(ndx);
             }
         }
     }
