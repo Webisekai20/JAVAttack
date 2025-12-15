@@ -418,7 +418,7 @@ public class JAVAttack extends JPanel implements ActionListener, KeyListener {
                     alienCount--;
                     score += 50*level * scoreBoost; 
 
-                    powerupChance = rand.nextInt(10); // powerup chance
+                    powerupChance = rand.nextInt(1); // powerup chance
                     if (powerupChance == 0) {
                         createPowerup(alien.x, alien.y);
                     }
@@ -752,7 +752,7 @@ public class JAVAttack extends JPanel implements ActionListener, KeyListener {
                 backgroundMusic.loop(Clip.LOOP_CONTINUOUSLY);
             }
         }
-        else if((e.getKeyCode() == KeyEvent.VK_SPACE || e.getKeyCode() == KeyEvent.VK_UP) &&  System.currentTimeMillis() - shootBuffer > bufferTime){
+        else if((e.getKeyCode() == KeyEvent.VK_SPACE || e.getKeyCode() == KeyEvent.VK_UP) &&  System.currentTimeMillis() - shootBuffer > bufferTime - bufferTimeBoost){
             Block bullet  = new Block(ship.x + shipWidth*15/32, ship.y, bulletWidth + attackSize, bulletHeight, null);
             bulletArray.add(bullet);
             shootBuffer = System.currentTimeMillis();
