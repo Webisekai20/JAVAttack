@@ -519,7 +519,7 @@ public class JAVAttack extends JPanel implements ActionListener, KeyListener {
                     newLevelSound.setFramePosition(0);
                     newLevelSound.start();
                 }
-                if (bossBackgroundMusic != null) {
+                if (level > 6) {
                     bossBackgroundMusic.stop();
                     backgroundMusic.start();
                 }
@@ -704,6 +704,9 @@ public class JAVAttack extends JPanel implements ActionListener, KeyListener {
             gameLoop.stop();
             if (backgroundMusic != null) {
                 backgroundMusic.stop();
+            }
+             if(backgroundMusic != null){
+                bossBackgroundMusic.stop();
             }
             for(int ndx = 0; ndx < activePowerupsArr.size(); ndx++){
                 deactivatePowerup(ndx);
