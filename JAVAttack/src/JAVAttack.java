@@ -71,13 +71,14 @@ public class JAVAttack extends JPanel implements ActionListener, KeyListener {
 
     // powerups
     ArrayList<Block> powerupArray;
-    int powerWidth = tileSize;
-    int powerHeight = tileSize/2;
+    int powerWidth = tileSize*2;
+    int powerHeight = tileSize;
     int powerX = tileSize*columns/2 - tileSize;
     int powerY = boardHeight - tileSize*2;
 
     int powerVelocity = 0; // speed boost | 0
     int attackSize = 0; // attack size | 1
+    int offset = 0;
     int scoreBoost = 1; // multiplier | 2
     int bufferTimeBoost = 0; // attack speed boost | 3
 
@@ -89,7 +90,7 @@ public class JAVAttack extends JPanel implements ActionListener, KeyListener {
 
     //shooting mechanics
     long shootBuffer = 0;
-    long bufferTime = 500 + bufferTimeBoost; //in milliseconds
+    long bufferTime = 500 - bufferTimeBoost; //in milliseconds
 
 
     //movement booleans
@@ -304,7 +305,7 @@ public class JAVAttack extends JPanel implements ActionListener, KeyListener {
             Block bullet = bulletArray.get(i);
             if(!bullet.used){
                 //g.drawRect(bullet.x, bullet.y, bullet.width, bullet.height);
-                g.fillRect(bullet.x, bullet.y, bullet.width, bullet.height);
+                g.fillRect(bullet.x - offset, bullet.y, bullet.width, bullet.height);
             }
         }
         g.setColor(Color.RED);
@@ -396,7 +397,7 @@ public class JAVAttack extends JPanel implements ActionListener, KeyListener {
                     alienCount--;
                     score += 50*level * scoreBoost; 
 
-                    powerupChance = rand.nextInt(20); // 0–19
+                    powerupChance = rand.nextInt(10); // 0–19
                     if (powerupChance == 0) {
                         createPowerup(alien.x, alien.y);
                     }
@@ -564,6 +565,7 @@ public class JAVAttack extends JPanel implements ActionListener, KeyListener {
                 break;
             case POWERUP1:
                 attackSize = tileSize;
+                offset = 16;
                 break;
             case POWERUP2:
                 scoreBoost = 2;
@@ -581,6 +583,7 @@ public class JAVAttack extends JPanel implements ActionListener, KeyListener {
                 break;
             case POWERUP1:
                 attackSize = 0;
+                offset = 0;
                 break;
             case POWERUP2:
                 scoreBoost = 1;
