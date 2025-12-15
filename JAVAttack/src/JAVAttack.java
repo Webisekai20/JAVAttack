@@ -548,12 +548,6 @@ public class JAVAttack extends JPanel implements ActionListener, KeyListener {
                 backgroundMusic.loop(Clip.LOOP_CONTINUOUSLY);
             }
         }
-        // else if (e.getKeyCode() == KeyEvent.VK_LEFT && ship.x - shipVelocityX >= 0) {
-        //     ship.x -= shipVelocityX;
-        // }
-        // else if(e.getKeyCode() == KeyEvent.VK_RIGHT && ship.x + ship.width + shipVelocityX <= boardWidth){
-        //     ship.x += shipVelocityX;
-        // }
         else if(e.getKeyCode() == KeyEvent.VK_SPACE &&  System.currentTimeMillis() - shootBuffer > bufferTime){
             Block bullet  = new Block(ship.x + shipWidth*15/32, ship.y, bulletWidth, bulletHeight, null);
             bulletArray.add(bullet);
@@ -564,21 +558,6 @@ public class JAVAttack extends JPanel implements ActionListener, KeyListener {
                 bulletSound.start();
            }
 
-//             try {
-//                 File soundFile = new File("shootShip.wav");
-//                 AudioInputStream audioIn = AudioSystem.getAudioInputStream(soundFile);
-//                 Clip clip = AudioSystem.getClip();
-//                 //FloatControl volume = (FloatControl) clip.getControl(FloatControl.Type.MASTER_GAIN);
-//                 //volume.setValue(-10.0f);
-//                 clip.open(audioIn);
-//                 clip.start();
-//             } catch (UnsupportedAudioFileException except) {
-//                 except.printStackTrace();
-//             } catch (IOException except) {
-//                 except.printStackTrace();
-//             } catch (LineUnavailableException except) {
-//                 except.printStackTrace();
-// }
 
           
         }
