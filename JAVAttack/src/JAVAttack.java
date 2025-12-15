@@ -80,6 +80,15 @@ public class JAVAttack extends JPanel implements ActionListener, KeyListener {
     int alienCount = 0; // num of aliens to defeat
     int alienVelocityX = 4;
 
+    // boss
+    Block boss = null;
+    boolean bossAlive = false;
+    int bossWidth = tileSize * 3;
+    int bossHeight = tileSize;
+    int bossHealth = 20;
+    int bossVelocityX = 2;
+
+
     // bullets
     ArrayList<Block> bulletArray;
     ArrayList<Block> alienBullets;
@@ -88,8 +97,6 @@ public class JAVAttack extends JPanel implements ActionListener, KeyListener {
     int bulletVelocityY = -7;// moving speed
 
     boolean gameStarted = false;
-    long startTime = 0;
-    long elapsedTime = 0;
     Timer gameLoop;  
     int score = 0;
     int level = 1;
@@ -274,6 +281,16 @@ public class JAVAttack extends JPanel implements ActionListener, KeyListener {
             g.drawString("Level: " + level, 10, 50);
         }
 
+        // boss
+        if (bossAlive && boss != null) {
+            g.drawImage(boss.img, boss.x, boss.y, boss.width, boss.height, null);
+
+            // boss health
+            g.setColor(Color.RED);
+            g.fillRect(boss.x, boss.y - 10, boss.width, 5);
+            g.setColor(Color.GREEN);
+            g.fillRect(boss.x, boss.y - 10, boss.width * bossHealth / (20 + level * 2), 5);
+        }
     }
 
     public void move(){
@@ -352,23 +369,76 @@ public class JAVAttack extends JPanel implements ActionListener, KeyListener {
         }
 
         // next level
-        if(alienCount == 0){
+        if(alienCount == 0 && !bossAlive){
             // increase aliens
             //score += alineColumn *alienRows *100;  no bonus
             level++;
-            alineColumn = Math.min(alineColumn +1, columns/2-2);
-            alienRows = Math.min(alienRows+1, rows - 6);
-            alienArray.clear();
-            bulletArray.clear();
-            alienBullets.clear();
-            alienVelocityX = 4;
-            createAliens();
-            if (newLevelSound != null) {
-                newLevelSound.setFramePosition(0);
-                newLevelSound.start();
+            // if boss level
+            if (level % 5 == 0) {
+                createBoss();
+            } else{
+                alineColumn = Math.min(alineColumn +1, columns/2-2);
+                alienRows = Math.min(alienRows+1, rows - 6);
+                alienArray.clear();
+                bulletArray.clear();
+                alienBullets.clear();
+                alienVelocityX = 4;
+                createAliens();
+                if (newLevelSound != null) {
+                    newLevelSound.setFramePosition(0);
+                    newLevelSound.start();
+                }
+            }
+        }
+
+        // boss attack
+        if (bossAlive && boss != null) {
+            boss.x += bossVelocityX;
+
+            if (boss.x <= 0 || boss.x + boss.width >= boardWidth) {
+                bossVelocityX *= -1;
+            }
+
+            Random bossBullet = new Random();
+            if (bossBullet.nextInt(40) == 1) {
+                int randomX = bossBullet.nextInt(boardWidth - bulletWidth);
+                alienBullets.add(new Block(randomX, boss.y + boss.height, bulletWidth, bulletHeight, null));
+            }
+        }
+
+        // boss damage and death
+        if (bossAlive && boss != null) {
+            for (int i = 0; i < bulletArray.size(); i++) {
+                Block bullet = bulletArray.get(i);
+
+                if (!bullet.used && detectCollision(bullet, boss)) {
+                    bullet.used = true;
+                    bossHealth--;
+
+                    if (bossHealth <= 0) {
+                        bossAlive = false;
+                        boss = null;
+                        score += 500 * level;
+                        alienCount = 0;
+                        i = bulletArray.size() + 1;
+                    }
+                }
             }
         }
     }
+
+    public void createBoss() {
+        boss = new Block(
+            boardWidth / 2 - bossWidth / 2,
+            tileSize,
+            bossWidth,
+            bossHeight,
+            alienYellowImg
+        );
+        bossAlive = true;
+        bossHealth = 20 + (level * 2);
+    }
+
 
     public void createAliens(){
         Random random = new Random();
@@ -427,7 +497,6 @@ public class JAVAttack extends JPanel implements ActionListener, KeyListener {
     public void keyPressed(KeyEvent e) {
         if (!gameStarted) {
         gameStarted = true;
-        startTime = System.currentTimeMillis();
         gameLoop.start();
 
         if (backgroundMusic != null) {
@@ -464,6 +533,8 @@ public class JAVAttack extends JPanel implements ActionListener, KeyListener {
             alienArray.clear();
             bulletArray.clear();
             alienBullets.clear();
+            boss = null;            
+            bossAlive = false;
             score = 0;
             alienVelocityX = 4;
             alineColumn = 3;
