@@ -196,7 +196,7 @@ public class JAVAttack extends JPanel implements ActionListener, KeyListener {
     private Clip deadSound;
        // ship got hit sound effect
     private Clip gameOverSound;
-       // ship got hit sound effect
+       // new level sound effect
     private Clip newLevelSound;
     
 
@@ -755,6 +755,7 @@ public class JAVAttack extends JPanel implements ActionListener, KeyListener {
     public void keyTyped(KeyEvent e) {}
 
     @Override
+
     public void keyPressed(KeyEvent e) {
         if (!gameStarted) {
         gameStarted = true;
