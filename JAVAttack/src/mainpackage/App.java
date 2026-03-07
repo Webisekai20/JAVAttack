@@ -1,4 +1,4 @@
-import java.util.jar.JarEntry;
+package mainpackage;
 
 import javax.swing.*;
 
