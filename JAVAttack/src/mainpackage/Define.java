@@ -1,6 +1,8 @@
 package mainpackage;
 
+
 import java.util.ArrayList;
+
 
 import javax.sound.sampled.Clip;
 
@@ -19,12 +21,8 @@ public class Define {
 
     final int powerWidth = tileSize *2;
     final int powerHeight = tileSize;
-    // final int powerX = tileSize* columns/2 - tileSize;
-    // final int powerY = boardHeight - tileSize*2;
     public int getPowerHeight() { return powerHeight;}
     public int getPowerWidth() {return powerWidth;}
-    // public int getPowerX() {return powerX;}
-    // public int getPowerY() {return powerY;}
 
       // bullets
     ArrayList<Block> bulletArray;
@@ -56,7 +54,7 @@ public class Define {
 
      //shooting mechanics
     long shootBuffer = 0;
-    long bufferTime = 500 - bufferTimeBoost; //in milliseconds
+    long bufferTime = 500 - bufferTimeBoost*2; //in milliseconds
     public long getShootBuffer() { return shootBuffer; }
     public long getBufferTime() { return bufferTime; }
     public void setShootBuffer(long shootBuffer) { this.shootBuffer = shootBuffer; }

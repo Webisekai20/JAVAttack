@@ -39,15 +39,20 @@ public class Assets {
     private static Clip deadSound;
     private static Clip gameOverSound;
     private static Clip newLevelSound;
+    private static Clip mainMenuMusic;
+    private static Clip pauseEffect;
+    private static Clip quitEffect;
     public static Clip getBackgroundMusic() {return backgroundMusic;}
     public static Clip getBossBackgroundMusic() {return bossBackgroundMusic;}
     public static Clip getBulletSound() {return bulletSound;}
     public static Clip getDeadSound() {return deadSound;}
     public static Clip getGameOverSound() {return gameOverSound;}
     public static Clip getNewLevelSound() {return newLevelSound;}
+    public static Clip getMainMenuMusic() {return mainMenuMusic;}
+    public static Clip getPauseEffect() {return pauseEffect;}
+    public static Clip getQuitEffect() {return quitEffect;}
 
     public static void LoadAssets() {
-        Define def = new Define();
         //load images
         bgImg = new ImageIcon(Assets.class.getResource("/assets/img/StarryBg.gif"));
         background = bgImg.getImage();
@@ -85,6 +90,11 @@ public class Assets {
         AlienBullets = new ArrayList<Block>();
         PowerupArray = new ArrayList<Block>();
         ActivePowerupsArr = new ArrayList<ActivePowerup>();
+         //populate ActivePowerupsArr
+        for(PowerupType ndx : PowerupType.values()){
+            ActivePowerup deactivated = new ActivePowerup(ndx, 0, false);
+            ActivePowerupsArr.add(deactivated);
+        }
             
         try {
             // Load main menu music

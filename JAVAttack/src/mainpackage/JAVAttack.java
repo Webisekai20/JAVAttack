@@ -1,21 +1,13 @@
 package mainpackage;
 
-
 import java.awt.*;
 import java.awt.event.*;
-import java.awt.image.BufferedImage;
+import java.io.FileOutputStream;
 import java.util.ArrayList;
+import java.util.Properties;
 import java.util.Random;
 import javax.swing.*;
-import javax.imageio.ImageIO;
-import javax.sound.sampled.AudioInputStream;
-import javax.sound.sampled.AudioSystem;
 import javax.sound.sampled.Clip;
-import java.io.IOException;
-import javax.sound.sampled.FloatControl; 
-
-
-
 
 public class JAVAttack extends JPanel implements ActionListener, KeyListener {
     Define def = new Define();
@@ -29,6 +21,7 @@ public class JAVAttack extends JPanel implements ActionListener, KeyListener {
         long remaining = POWERUP_DURATION - elapsed;
         return Math.max(remaining, 0);
     }
+    ArrayList<RecordStruct> recordStructArr;
     // Game timer
     boolean gameStarted = false;
     Timer gameLoop;  
@@ -45,15 +38,32 @@ public class JAVAttack extends JPanel implements ActionListener, KeyListener {
 
         // game timer
         gameLoop = new Timer(1000/60, this);
-        createAliens();
+        if(!recordLoaded && Record.loadGame() != null){
+            recordStructArr = Record.loadGame();
+            recordLoaded = true;
+            for (RecordStruct data : recordStructArr) {
+                System.out.println("[" + data.timestamp + "] " + data.playerName +
+                    " scored " + data.score + " at level " + data.level);
+            }
+        }
     }
 
     public void paintComponent(Graphics g){
         super.paintComponent(g);
         draw(g);
+        if (def.isPaused() && gameOver == false) {
+            g.setColor(new Color(0, 0, 0, 150)); // semi-transparent overlay
+            g.fillRect(0, 0, getWidth(), getHeight());
+            g.setColor(Color.WHITE);
+            g.setFont(new Font("Arial", Font.BOLD, 40));
+            g.drawString("PAUSED", getWidth()/2 - 80, getHeight()/2);
+        }
+        
+
     }
 
     public void draw (Graphics g){
+        
         //start
         g.drawImage(Assets.background, 0, 0, def.getBoardWidth(), def.getBoardHeight(), this);
         Graphics2D g2d = (Graphics2D) g;
@@ -67,11 +77,42 @@ public class JAVAttack extends JPanel implements ActionListener, KeyListener {
         g2d.fillRect(0, 0, def.getBoardWidth(), def.getBoardHeight());
 
         g.setColor(Color.WHITE);
-        g.setFont(new Font("Arial", Font.ITALIC, 20));
+       
 
         if (!gameStarted) {
-            g.drawString("Press Any Key to Start", def.getBoardWidth()/2-103, def.getBoardHeight()/2);
+            if (Assets.getMainMenuMusic() != null && !Assets.getMainMenuMusic().isRunning()) {
+                Assets.getMainMenuMusic().setFramePosition(0);
+                Assets.getMainMenuMusic().loop(Clip.LOOP_CONTINUOUSLY);
+            }
+            g2d.setFont(new Font("Algerian", Font.PLAIN, 50));
+            g2d.setColor(Color.CYAN);
+            g2d.drawString("JAVAttack", def.getBoardWidth()/2 - 150, def.getBoardHeight()/2-80);
+            g.setFont(new Font("Arial", Font.BOLD, 25));
+            g.setColor(Color.WHITE);
+            g.drawString("       Ranking", def.getBoardWidth()/2-100, def.getBoardHeight()/2+35);
+            g.setFont(new Font("Arial", Font.ITALIC, 20));
+            g.drawString("Player    Score   Level", def.getBoardWidth()/2-100, def.getBoardHeight()/2+60);
+            if(recordStructArr != null){
+                for(int i = 0; i < recordStructArr.size(); i++){
+                    g.drawString("    " + recordStructArr.get(i).playerName + "     " + recordStructArr.get(i).score +
+                    "       " + recordStructArr.get(i).level  , def.getBoardWidth()/2-100, def.getBoardHeight()/2+(85+i*25));
+
+                }
+            }
+            g.setColor(Color.GRAY);
+            g.setFont(new Font("Arial", Font.ITALIC, 20));
+            if(def.getLastBlinkBuffer() < System.currentTimeMillis() && def.getLastBlinkBuffer() + def.getBlinkBuffer() > System.currentTimeMillis()){
+                g.drawString("Press S Key to Start", def.getBoardWidth()/2-90, def.getBoardHeight()/2-20);
+            } else{
+                 def.setLastBlinkBuffer(System.currentTimeMillis());
+            }
+            // g.drawString("milis: " + (def.getLastBlinkBuffer()+def.getBlinkBuffer()), def.getBoardWidth()/2-120, def.getBoardHeight()/2-150);
+            // g.drawString("current" + System.currentTimeMillis(), def.getBoardWidth()/2-120, def.getBoardHeight()/2-170);
+
+        }else if(Assets.getMainMenuMusic().isRunning()){
+            Assets.getMainMenuMusic().stop();
         }
+
 
         //ship
         g.drawImage(ship.getImg(), ship.getX(), ship.getY(), ship.getWidth(), ship.getHeight(), null);  
@@ -134,14 +175,19 @@ public class JAVAttack extends JPanel implements ActionListener, KeyListener {
 
         // score
         g.setColor(Color.WHITE);
-        g.setFont(new Font("Arial", Font.PLAIN, 20));
-        if(gameOver){
+        g.setFont(new Font("Arial", Font.PLAIN, 20)); 
+        if(gameOver && gameStarted){
+            g.setColor(new Color(0, 0, 0, 150)); // semi-transparent overlay
+            g.fillRect(0, 0, getWidth(), getHeight());
+            g2d.setColor(Color.WHITE);
             g2d.setFont(new Font("Arial", Font.BOLD, 40));
             g2d.drawString("GAME OVER!", def.getBoardWidth()/2 - 125, def.getBoardHeight()/2-40);
             g2d.setFont(new Font("Arial", Font.ITALIC, 20));
             g2d.drawString("Total Score: " + String.valueOf(def.getScore()),def.getBoardWidth()/2 - 65, def.getBoardHeight()/2);
             g2d.setFont(new Font("Arial", Font.PLAIN, 10));
-            g.drawString("Press Any Key to Start", def.getBoardWidth()/2-55, def.getBoardHeight()/2+80);
+            g.drawString("Press S Key to Start", def.getBoardWidth()/2-55, def.getBoardHeight()/2+80);
+            g.drawString("Press ENTER Key to Main Menu", def.getBoardWidth()/2-67, def.getBoardHeight()/2+60);
+            
         }
         else if (gameStarted){
             g.drawString("Score: " + String.valueOf(def.getScore()), 10, 30);
@@ -467,11 +513,7 @@ public class JAVAttack extends JPanel implements ActionListener, KeyListener {
     
 
     @Override
-    public void actionPerformed(ActionEvent e) {
-       move();
-       moveShip(); 
-       repaint();
-        
+    public void actionPerformed(ActionEvent e) {     
         if(gameOver){
             gameLoop.stop();
             if (Assets.getBackgroundMusic() != null) {
@@ -483,6 +525,11 @@ public class JAVAttack extends JPanel implements ActionListener, KeyListener {
             for(int ndx = 0; ndx < Assets.ActivePowerupsArr.size(); ndx++){
                 deactivatePowerup(ndx);
             }
+        }else {
+            if(!def.isPaused()){
+                move();
+                moveShip(); 
+            }repaint();
         }
     }
 
@@ -529,21 +576,25 @@ public class JAVAttack extends JPanel implements ActionListener, KeyListener {
         if(e.getKeyCode() == KeyEvent.VK_RIGHT && ship.getX() + ship.getWidth() + def.getShipVelocityX() <= def.getBoardWidth()){
             def.setRight(true);
         }
-    }
+        if (e.getKeyCode() == KeyEvent.VK_P && gameStarted == true && gameOver == false) { // Press 'P' to toggle pause
+            def.setPaused(!def.isPaused());
+            if (Assets.getPauseEffect() != null) {
+                Assets.getPauseEffect().setFramePosition(0);
+                Assets.getPauseEffect().start();
+           }
+        }
 
+        if (e.getKeyCode() == KeyEvent.VK_Q && !gameOver && gameStarted) {
+            if (Assets.getQuitEffect() != null) {
+                Assets.getQuitEffect().setFramePosition(0);
+                Assets.getQuitEffect().start();
+           }
+            gameOver = true;
+        }
 
         
-
-    @Override
-    public void keyReleased(KeyEvent e) {
-        if (e.getKeyCode() == KeyEvent.VK_LEFT && ship.getX() - def.getShipVelocityX() >= 0) {
-            def.setLeft(false);
-        }
-        if(e.getKeyCode() == KeyEvent.VK_RIGHT && ship.getX() + ship.getWidth() + def.getShipVelocityX() <= def.getBoardWidth()){
-            def.setRight(false);
-        }
-        if(gameOver){
-
+        if(gameOver && e.getKeyCode() == KeyEvent.VK_S){
+            
             ship.setX(def.getShipX());
             Assets.AlienArray.clear();
             Assets.BulletArray.clear();
