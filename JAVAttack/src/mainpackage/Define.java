@@ -95,10 +95,11 @@ public class Define {
     public int getAlienY() {return alienY;}
 
 
-    int alienRows = 2;
-    int alienColumn = 3;
-    int alienCount = 0; // num of aliens to defeat
-    int alienVelocityX = 4;
+     int alienRows = 2;
+     int alienColumn = 3;
+     int alienCount = 0; // num of aliens to defeat
+     int alienVelocityX = 4; //1;
+     int blinkFactor;
     public int getAlienRows() {return alienRows;}
     public int getAlienColumn() {return alienColumn;}
     public int getAlienCount() {return alienCount;}
@@ -126,5 +127,27 @@ public class Define {
     public void setBossHealth(int bossHealth) {this.bossHealth = bossHealth;}
     public void setBossVelocityX(int bossVelocityX) {this.bossVelocityX = bossVelocityX;}
 
+    private boolean paused = false;
+    public boolean isPaused() {return paused;}
+    public void setPaused(boolean paused) {this.paused = paused;}
+    
+
+    // game Exe
+    private String playerName = "AL";
+    private int score = 0;
+    private int level = 1;
+    private long pressBuffer = 0;
+    private long blinkBUffer = 850;
+    private long lastBlinkBUffer = 0;
+    public String getPlayerName() {return playerName;}
+    public int getScore() {return score;}
+    public int getLevel() {return level;}
+    public long getPressBuffer() {return pressBuffer;}
+    public long getBlinkBuffer() {return blinkBUffer;}
+    public long getLastBlinkBuffer() {return lastBlinkBUffer;}
+    public void setLevel(int level) {this.level = level;}
+    public void setScore(int score) {this.score = score;}
+    public void setPressBuffer(long pressBuffer) {this.pressBuffer = pressBuffer;}
+    public void setLastBlinkBuffer(long lastBlinkBuffer) {this.lastBlinkBUffer = lastBlinkBuffer;}
 
 }

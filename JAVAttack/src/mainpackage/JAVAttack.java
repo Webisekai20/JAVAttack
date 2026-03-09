@@ -19,6 +19,7 @@ import javax.sound.sampled.FloatControl;
 
 public class JAVAttack extends JPanel implements ActionListener, KeyListener {
     Define def = new Define();
+    // Target target = new Target();
     Block ship;
     long powerupStartTime;
     final long POWERUP_DURATION = 15000;
@@ -31,10 +32,9 @@ public class JAVAttack extends JPanel implements ActionListener, KeyListener {
     // Game timer
     boolean gameStarted = false;
     Timer gameLoop;  
-    int score = 0;
-    int level = 1;
-    boolean gameOver = false;   
-
+    boolean gameOver = false;
+    boolean recordLoaded = false;   
+ 
     JAVAttack(){
         setPreferredSize(new Dimension(def.getBoardHeight(), def.getBoardWidth())); // windowsize/ screen size of the game
         setBackground(Color.BLACK);
@@ -139,14 +139,28 @@ public class JAVAttack extends JPanel implements ActionListener, KeyListener {
             g2d.setFont(new Font("Arial", Font.BOLD, 40));
             g2d.drawString("GAME OVER!", def.getBoardWidth()/2 - 125, def.getBoardHeight()/2-40);
             g2d.setFont(new Font("Arial", Font.ITALIC, 20));
-            g2d.drawString("Total Score: " + String.valueOf(score),def.getBoardWidth()/2 - 65, def.getBoardHeight()/2);
+            g2d.drawString("Total Score: " + String.valueOf(def.getScore()),def.getBoardWidth()/2 - 65, def.getBoardHeight()/2);
             g2d.setFont(new Font("Arial", Font.PLAIN, 10));
             g.drawString("Press Any Key to Start", def.getBoardWidth()/2-55, def.getBoardHeight()/2+80);
         }
         else if (gameStarted){
-            g.drawString("Score: " + String.valueOf(score), 10, 30);
+            g.drawString("Score: " + String.valueOf(def.getScore()), 10, 30);
             g.setFont(new Font("Arial", Font.ITALIC, 15));
-            g.drawString("Level: " + level, 10, 50);
+            g.drawString("Level: " + def.getLevel(), 10, 50);
+            g.drawString("Press:    P - Pause/Resume     Q - Quit", 0, 500);
+            g.setFont(new Font("Arial", Font.ITALIC, 10));
+            g.drawString("Alien velocity: " + def.getAlienVelocityX(), 100, 100);
+            g.drawString("Alien count: " + def.getAlienCount(), 100, 110);
+            g.drawString("Alien bullet: " + (-def.getBulletVelocityY()-4+def.getLevel()), 100, 120);
+            g.drawString("Player bullet: " + def.getBulletVelocityY(), 100, 130);
+            g.drawString("Alien column: " + def.getAlienColumn(), 100, 140);
+            g.drawString("Alien rows: " + def.getAlienRows(), 100, 150);
+            g.drawString("Power Velocity: " + def.getPowerVelocity(), 100, 160);
+            g.drawString("Attack Size: " + def.getAttackSize(), 100, 170);
+            g.drawString("offset: " + def.getOffset(), 100, 180);
+            g.drawString("buffer Time Boost: " + def.getBufferTimeBoost(), 100, 190);
+
+
         }
 
         // boss
@@ -157,193 +171,9 @@ public class JAVAttack extends JPanel implements ActionListener, KeyListener {
             g.setColor(Color.RED);
             g.fillRect(def.getBoss().getX(), def.getBoss().getY() - 10, def.getBoss().getWidth(), 5);
             g.setColor(Color.GREEN);
-            g.fillRect(def.getBoss().getX(), def.getBoss().getY() - 10, def.getBoss().getWidth() * def.getBossHealth() / (20 + level * 2), 5);
+            g.fillRect(def.getBoss().getX(), def.getBoss().getY() - 10, def.getBoss().getWidth() * def.getBossHealth() / (20 + def.getLevel() * 2), 5);
         }
     }
-
-    public void move(){
-        //aliens
-        int random;
-        int powerupChance;
-        Random rand = new Random();
-        for(int i = 0; i < Assets.AlienArray.size(); i++){
-            Block alien = Assets.AlienArray.get(i);
-            if(alien.isAlive()){
-                alien.setX(alien.getX() + def.getAlienVelocityX());
-
-                random = rand.nextInt(100 + (100 * level)) + 1;
-
-                if(random == 1){  // chances are 1/100 frames. change the param in rand.nextInt() to change the chances
-                    Assets.AlienBullets.add(new Block(alien.getX() + def.getAlienWidth()*15/32, alien.getY(),  def.getBulletWidth(), def.getBulletHeight(), null));
-                }
-
-                if (alien.getX() + alien.getWidth() >= def.getBoardWidth() || alien.getX() <=0) {
-                    def.setAlienVelocityX(def.getAlienVelocityX() * -1);
-                    alien.setX(alien.getX() + def.getAlienVelocityX()*2);
-
-                    //move all aliens down by one row
-                    for(int j = 0; j < Assets.AlienArray.size(); j++){
-                        Assets.AlienArray.get(j).setY(Assets.AlienArray.get(j).getY() + def.getAlienHeight());
-                    }
-                }
-                if(alien.getY() >= ship.getY()){
-                    gameOver = true;
-                }
-            }
-        }
-        //bullets
-        for(int i = 0; i < Assets.BulletArray.size(); i++ ){
-            Block bullet = Assets.BulletArray.get(i);
-            bullet.setY(bullet.getY() + def.getBulletVelocityY()- def.getPowerVelocity());
-            // bullet collision with aliens
-            for(int j = 0; j < Assets.AlienArray.size(); j++){
-                Block alien = Assets.AlienArray.get(j);
-                if(!bullet.isUsed() && alien.isAlive() && detectCollision(bullet, alien)){
-                    bullet.setUsed( true);
-                    alien.setAlive( false);
-                    def.setAlienCount(def.getAlienCount() -1);
-                    score += 50*level * def.getScoreBoost(); 
-                    powerupChance = rand.nextInt(10); // powerup chance
-                    if (powerupChance == 0) {
-                        createPowerup(alien.getX(), alien.getY());
-                    }
-
-                    if (Assets.getDeadSound() != null) {
-                        Assets.getDeadSound().setFramePosition(0);
-                        Assets.getDeadSound().start();
-                    }
-                }
-            }
-        }
-        for(int i = 0;i < Assets.AlienBullets.size(); i++ ){
-            Block bullet = Assets.AlienBullets.get(i);
-            bullet.setY(bullet.getY() - def.getBulletVelocityY());
-            // bullet collision with aliens
-            if(detectCollision(bullet, ship)){
-                bullet.setUsed(true);
-                gameOver = true;
-                    if (Assets.getGameOverSound() != null) {
-                    Assets.getGameOverSound().setFramePosition(0);
-                    Assets.getGameOverSound().start();
-                }
-            }
-        }
-        // powerups
-        for (int i = 0; i < Assets.PowerupArray.size(); i++){
-            Block p = Assets.PowerupArray.get(i);
-            if(ship.getY() > p.getY()){
-                p.setY(p.getY() + 4);
-            }
-
-            if (detectCollision(p, ship)){
-                activatePowerup(p.getType());
-                Assets.PowerupArray.remove(i);
-                i--;
-                continue;
-
-            }else if (p.getY() > def.getBoardHeight()){
-                Assets.PowerupArray.remove(i);
-                i--;
-            }
-            for (int ndx = 0; ndx < 4; ndx++) {
-                ActivePowerup ap = Assets.ActivePowerupsArr.get(ndx);
-                if (ap.getIsActive() && getRemainingTimeMs(ap) == 0) {
-                    deactivatePowerup(ndx);
-                }
-            }
-        }
-        //populate ActivePowerupsArr
-        for(PowerupType ndx : PowerupType.values()){
-            ActivePowerup deactivated = new ActivePowerup(ndx, 0, false);
-            Assets.ActivePowerupsArr.add(deactivated);
-        }
-        // clear out of screen bullets
-        while(Assets.BulletArray.size() >0 && (Assets.BulletArray.get(0).isUsed() || Assets.BulletArray.get(0).getY() < 0)){
-            Assets.BulletArray.remove(0);
-        }
-        while(Assets.AlienBullets.size() >0 && (Assets.AlienBullets.get(0).isUsed() || Assets.AlienBullets.get(0).getY() < 0)){
-            Assets.AlienBullets.remove(0);
-        }
-        // next level
-        if(def.getAlienCount() == 0 && !def.isBossAlive()){
-            // increase aliens
-            level++;
-            // if boss level
-            if (level % 5 == 0) {
-                createBoss();
-                if (Assets.getBackgroundMusic() != null) {
-                    Assets.getBackgroundMusic().stop();
-                    Assets.getBossBackgroundMusic().start();
-                }
-            } else{
-                def.setAlienColumn( Math.min(def.getAlienColumn() +1, def.getColumn()/2-2));
-                def.setAlienRows( Math.min(def.getAlienRows()+1, def.getRow() - 6));
-                Assets.AlienArray.clear();
-                Assets.BulletArray.clear();
-                Assets.AlienBullets.clear();
-                def.setAlienVelocityX (4);
-                createAliens();
-                if (Assets.getNewLevelSound() != null) {
-                    Assets.getNewLevelSound().setFramePosition(0);
-                    Assets.getNewLevelSound().start();
-                }
-                if (level > 5) {
-                    Assets.getBossBackgroundMusic().stop();
-                    Assets.getBackgroundMusic().loop(Clip.LOOP_CONTINUOUSLY);
-                    // backgroundMusic.start();
-                }       
-            }
-        }
-        // boss attack
-        if (def.isBossAlive() && def.getBoss() != null) {
-            Random bossBullet = new Random();
-            int targetX = ship.getX() + ship.getWidth() / 2;
-            int fireRate = Math.max(8, 40 - level * 3);
-            int randomX = bossBullet.nextInt(def.getBoardWidth() - def.getBulletWidth());
-            def.getBoss().setX(def.getBoss().getX() + def.getBossVelocityX());
-            if (def.getBoss().getX() <= 0 || def.getBoss().getX() + def.getBoss().getWidth() >= def.getBoardWidth()) {
-                def.setBossVelocityX(def.getBossVelocityX() * -1);
-            }
-            if (bossBullet.nextInt(fireRate) == 1) {
-                for (int i = 0; i < def.getBoardWidth(); i += def.getTileSize() * 4) {
-                    Assets.AlienBullets.add(new Block(i, def.getBoss().getY() + def.getBoss().getHeight(), def.getBulletWidth(), def.getBulletHeight(), null));
-                }
-                Assets.AlienBullets.add(new Block(randomX, def.getBoss().getY() + def.getBoss().getHeight(), def.getBulletWidth(), def.getBulletHeight(), null));
-                Assets.AlienBullets.add(new Block(targetX, def.getBoss().getY() + def.getBoss().getHeight(), def.getBulletWidth(), def.getBulletHeight(), null));
-            }
-        }
-        // boss damage and death
-        if (def.isBossAlive() && def.getBoss() != null) {
-            for (int i = 0; i < Assets.BulletArray.size(); i++) {
-                Block bullet = Assets.BulletArray.get(i);
-                if (!bullet.isUsed() && detectCollision(bullet, def.getBoss())) {
-                    bullet.setUsed( true);
-                    def.setBossHealth(def.getBossHealth() - 1);
-                    if (def.getBossHealth() <= 0) {
-                        def.setBossAlive(false);
-                        def.setBoss(null);
-                        score += 500 * level;
-                        def.setAlienCount(0) ;
-                        i = Assets.BulletArray.size() + 1;
-                    }
-                }
-            }
-        }
-    }
-
-    public void createBoss() {
-        Block boss = new Block(
-            def.getBoardWidth() / 2 - def.getBossWidth() / 2,
-            def.getTileSize(),
-            def.getBossWidth(),
-            def.getBossHeight(),
-            Assets.alienYellowImg
-        );
-        def.setBoss(boss);
-        def.setBossAlive(true);
-        def.setBossHealth(20 + (level * 2));
-    }
-
 
     public void createAliens(){
         Random random = new Random();
@@ -361,6 +191,22 @@ public class JAVAttack extends JPanel implements ActionListener, KeyListener {
             }
         }
         def.setAlienCount(Assets.AlienArray.size());
+    }
+    // public void createBlinker(){
+
+    // }
+    
+    public void createBoss() {
+        Block boss = new Block(
+            def.getBoardWidth() / 2 - def.getBossWidth() / 2,
+            def.getTileSize(),
+            def.getBossWidth(),
+            def.getBossHeight(),
+            Assets.alienYellowImg
+        );
+        def.setBoss(boss);
+        def.setBossAlive(true);
+        def.setBossHealth(20 + (def.getLevel() * 2));
     }
 
     public void activatePowerup(PowerupType type){
@@ -451,6 +297,175 @@ public class JAVAttack extends JPanel implements ActionListener, KeyListener {
         }
     }
 
+
+    public void move(){
+        //aliens
+        int random;
+        int powerupChance;
+        Random rand = new Random();
+        for(int i = 0; i < Assets.AlienArray.size(); i++){
+            Block alien = Assets.AlienArray.get(i);
+            if(alien.isAlive()){
+                alien.setX(alien.getX() + def.getAlienVelocityX());
+                random = rand.nextInt(100 + (100 * def.getLevel())) + 1;
+
+                if(random == 1){  // chances are 1/100 frames. change the param in rand.nextInt() to change the chances
+                    Assets.AlienBullets.add(new Block(alien.getX() + def.getAlienWidth()*15/32, alien.getY(),  def.getBulletWidth(), def.getBulletHeight(), null));
+                }
+                if (alien.getX() + alien.getWidth() >= def.getBoardWidth() || alien.getX() <=0) {
+                    def.setAlienVelocityX(def.getAlienVelocityX() * -1);
+                    // alien.setX(alien.getX() + def.getAlienVelocityX()+def.getLevel()-1); //suprise one the 3rd level
+                    alien.setX(alien.getX() + def.getAlienVelocityX()*2);
+
+                    //move all aliens down by one row
+                    for(int j = 0; j < Assets.AlienArray.size(); j++){
+                        Assets.AlienArray.get(j).setY(Assets.AlienArray.get(j).getY() + def.getAlienHeight());
+                    }
+                }
+                if(alien.getY() >= ship.getY()){
+                    gameOver = true;
+                }
+            }
+        }
+        //bullets
+        for(int i = 0; i < Assets.BulletArray.size(); i++ ){  // player bullets
+            Block bullet = Assets.BulletArray.get(i);
+            bullet.setY(bullet.getY() + def.getBulletVelocityY()- def.getPowerVelocity());
+            // bullet collision with aliens
+            for(int j = 0; j < Assets.AlienArray.size(); j++){
+                Block alien = Assets.AlienArray.get(j);
+                if(!bullet.isUsed() && alien.isAlive() && detectCollision(bullet, alien)){
+                    if (Assets.getDeadSound() != null) {
+                        Assets.getDeadSound().setFramePosition(0);
+                        Assets.getDeadSound().start();
+                    }
+                    bullet.setUsed( true);
+                    alien.setAlive( false);
+                    def.setAlienCount(def.getAlienCount() -1);
+                    def.setScore (def.getScore()+ 50*def.getLevel() * def.getScoreBoost()); 
+                    powerupChance = rand.nextInt(10); // powerup chance
+                    if (powerupChance == 0) {
+                        createPowerup(alien.getX(), alien.getY());
+                    }
+
+                    
+                }
+            }
+        }
+        for(int i = 0;i < Assets.AlienBullets.size(); i++ ){ //alien bullet
+            Block bullet = Assets.AlienBullets.get(i);  
+            bullet.setY(bullet.getY() - def.getBulletVelocityY()); //-4+level
+            // bullet collision with aliens
+            if(detectCollision(bullet, ship)){
+                bullet.setUsed(true);
+                def.setPaused(false);
+                gameOver = true;
+                if (Assets.getGameOverSound() != null) {
+                    Assets.getGameOverSound().setFramePosition(0);
+                    Assets.getGameOverSound().start();
+                }
+            }
+        }
+        // powerups
+        for (int i = 0; i < Assets.PowerupArray.size(); i++){
+            Block powerUp = Assets.PowerupArray.get(i);
+            if(ship.getY() > powerUp.getY()){
+                powerUp.setY(powerUp.getY() + 4);
+            }
+
+            if (detectCollision(powerUp, ship)){
+                activatePowerup(powerUp.getType());
+                Assets.PowerupArray.remove(i);
+                i--;
+                continue;
+            }
+            for (int ndx = 0; ndx < 4; ndx++) {
+                ActivePowerup ap = Assets.ActivePowerupsArr.get(ndx);
+                if (ap.getIsActive() && getRemainingTimeMs(ap) == 0) {
+                    deactivatePowerup(ndx);
+                }
+            }
+        }
+       
+        // clear out of screen bullets
+        while(Assets.BulletArray.size() >0 && (Assets.BulletArray.get(0).isUsed() || Assets.BulletArray.get(0).getY() < 0)){
+            Assets.BulletArray.remove(0);
+        }
+        while(Assets.AlienBullets.size() >0 && (Assets.AlienBullets.get(0).isUsed() || Assets.AlienBullets.get(0).getY() < 0)){
+            Assets.AlienBullets.remove(0);
+        }
+        // next level
+        if(def.getAlienCount() == 0 && !def.isBossAlive()){
+            // increase aliens
+           def.setLevel(def.getLevel()+1);
+            // if boss level
+            if (def.getLevel() % 5 == 0) {
+                createBoss();
+                if (Assets.getBackgroundMusic() != null) {
+                    Assets.getBackgroundMusic().stop();
+                    Assets.getBossBackgroundMusic().start();
+                }
+            } else{
+                def.setAlienColumn( Math.min(def.getAlienColumn()+(def.getLevel()-1), def.getColumn()/2-2));
+                def.setAlienRows( Math.min(def.getAlienRows()+(def.getLevel()-1), def.getRow() - 6));
+                Assets.AlienArray.clear();
+                Assets.BulletArray.clear();
+                Assets.AlienBullets.clear();
+                def.setAlienVelocityX (4); //def.getAlienVelocityX()+1
+                createAliens();
+                if (Assets.getNewLevelSound() != null) {
+                    Assets.getNewLevelSound().setFramePosition(0);
+                    Assets.getNewLevelSound().start();
+                }
+                if (Assets.getBackgroundMusic() != null) { 
+                    if(def.getLevel() > 5 && Assets.getBossBackgroundMusic().isRunning()){
+                        Assets.getBossBackgroundMusic().stop();
+                    }
+                    
+                    Assets.getBackgroundMusic().loop(Clip.LOOP_CONTINUOUSLY);
+                    // backgroundMusic.start();
+                }       
+            }
+        }
+        // boss attack
+        if (def.isBossAlive() && def.getBoss() != null) {
+            Random bossBullet = new Random();
+            int targetX = ship.getX() + ship.getWidth() / 2;
+            int fireRate = Math.max(8,40 - def.getLevel() * 2);
+            int randomX = bossBullet.nextInt(def.getBoardWidth() - def.getBulletWidth());
+            def.getBoss().setX(def.getBoss().getX() + def.getBossVelocityX());
+            if (def.getBoss().getX() <= 0 || def.getBoss().getX() + def.getBoss().getWidth() >= def.getBoardWidth()) {
+                def.setBossVelocityX(def.getBossVelocityX() * -1);
+            }
+            if (bossBullet.nextInt(fireRate) == 1) {
+                for (int i = 0; i < def.getBoardWidth(); i += def.getTileSize() * 4) {
+                    Assets.AlienBullets.add(new Block(i, def.getBoss().getY() + def.getBoss().getHeight(), def.getBulletWidth(), def.getBulletHeight(), null));
+                }
+                Assets.AlienBullets.add(new Block(randomX, def.getBoss().getY() + def.getBoss().getHeight(), def.getBulletWidth(), def.getBulletHeight(), null));
+                Assets.AlienBullets.add(new Block(targetX, def.getBoss().getY() + def.getBoss().getHeight(), def.getBulletWidth(), def.getBulletHeight(), null));
+            }
+        }
+        // boss damage and death
+        if (def.isBossAlive() && def.getBoss() != null) {
+            for (int i = 0; i < Assets.BulletArray.size(); i++) {
+                Block bullet = Assets.BulletArray.get(i);
+                if (!bullet.isUsed() && detectCollision(bullet, def.getBoss())) {
+                    bullet.setUsed( true);
+                    def.setBossHealth(def.getBossHealth() - 1);
+                    if (def.getBossHealth() <= 0) {
+                        def.setBossAlive(false);
+                        def.setBoss(null);
+                        def.setScore(def.getScore() + 500 * def.getLevel());
+                        def.setAlienCount(0) ;
+                        i = Assets.BulletArray.size() + 1;
+                    }
+                }
+            }
+        }
+    }
+
+    
+
     @Override
     public void actionPerformed(ActionEvent e) {
        move();
@@ -476,15 +491,37 @@ public class JAVAttack extends JPanel implements ActionListener, KeyListener {
 
     @Override
     public void keyPressed(KeyEvent e) {
-        if (!gameStarted) {
-        gameStarted = true;
-        gameLoop.start();
-
-        if (Assets.getBackgroundMusic() != null) {
-            Assets.getBackgroundMusic().loop(Clip.LOOP_CONTINUOUSLY);
+        // if(def.getPressBuffer() == 0){
+        //     def.setPressBuffer(System.currentTimeMillis());
+        // }        
+        if (e.getKeyCode() == KeyEvent.VK_S && !gameStarted) {
+            gameStarted = true;
+            gameLoop.start();
+             if (def.getLevel() % 5 == 0) {
+                createBoss();
+                if (Assets.getBackgroundMusic() != null) {
+                    Assets.getBackgroundMusic().stop();
+                }Assets.getBossBackgroundMusic().start();
+            } else{
+                def.setAlienColumn( Math.min(def.getAlienColumn()+(def.getLevel()-1), def.getColumn()/2-2));
+                def.setAlienRows( Math.min(def.getAlienRows()+(def.getLevel()-1), def.getRow() - 6));
+                def.setAlienVelocityX (4); //def.getAlienVelocityX()+1
+                createAliens();
+                if (Assets.getNewLevelSound() != null) {
+                    Assets.getNewLevelSound().setFramePosition(0);
+                    Assets.getNewLevelSound().start();
+                }
+                if (Assets.getBackgroundMusic() != null) { 
+                    if(def.getLevel() > 5 && Assets.getBossBackgroundMusic().isRunning()){
+                        Assets.getBossBackgroundMusic().stop();
+                    }
+                    Assets.getBackgroundMusic().setFramePosition(0);
+                    Assets.getBackgroundMusic().loop(Clip.LOOP_CONTINUOUSLY);
+                    // backgroundMusic.start();
+                }       
+            }
+            def.setPressBuffer(0);
         }
-        
-    }
 
         if (e.getKeyCode() == KeyEvent.VK_LEFT && ship.getX() - def.getShipVelocityX() >= 0) {
             def.setLeft(true);
@@ -514,28 +551,104 @@ public class JAVAttack extends JPanel implements ActionListener, KeyListener {
             Assets.PowerupArray.clear();
             def.setBoss(null);
             def.setBossAlive(false);
-            score = 0;
-            def.setAlienVelocityX (4) ;
+            def.setScore(0);
+            def.setAlienVelocityX (4); // 1
             def.setAlienColumn(3);
             def.setAlienRows(2);
-            level = 1;
+            def.setLevel(1);
             gameOver = false;
-            createAliens();
+            def.setPaused(false);
             gameLoop.start();
-            if (Assets.getBackgroundMusic() != null) {
-                Assets.getBackgroundMusic().setFramePosition(0);
-                Assets.getBackgroundMusic().loop(Clip.LOOP_CONTINUOUSLY);
+            if (def.getLevel() % 5 == 0) {
+                createBoss();
+                if (Assets.getBackgroundMusic() != null) {
+                    Assets.getBackgroundMusic().stop();
+                    Assets.getBossBackgroundMusic().start();
+                }
+            } else{
+                def.setAlienColumn( Math.min(def.getAlienColumn()+(def.getLevel()-1), def.getColumn()/2-2));
+                def.setAlienRows( Math.min(def.getAlienRows()+(def.getLevel()-1), def.getRow() - 6));
+                def.setAlienVelocityX (4); //def.getAlienVelocityX()+1
+                createAliens();
+                if (Assets.getNewLevelSound() != null) {
+                    Assets.getNewLevelSound().setFramePosition(0);
+                    Assets.getNewLevelSound().start();
+                }
+                if (Assets.getBackgroundMusic() != null) { 
+                    if(def.getLevel() > 5 && Assets.getBossBackgroundMusic().isRunning()){
+                        Assets.getBossBackgroundMusic().stop();
+                    }
+                    Assets.getBackgroundMusic().setFramePosition(0);
+                    Assets.getBackgroundMusic().loop(Clip.LOOP_CONTINUOUSLY);
+                    // backgroundMusic.start();
+                }       
             }
         }
-        else if((e.getKeyCode() == KeyEvent.VK_SPACE || e.getKeyCode() == KeyEvent.VK_UP) &&  System.currentTimeMillis() - def.getShootBuffer() > def.getBufferTime() - def.getBufferTimeBoost()){
-            Block bullet  = new Block(ship.getX() + def.getShipWidth()*15/32, ship.getY(), def.getBulletWidth() + def.getAttackSize(), def.getBulletHeight(), null);
-            Assets.BulletArray.add(bullet);
-            def.setShootBuffer(System.currentTimeMillis());
-               //   Play bullet sound
-            if (Assets.getBulletSound() != null) {
-                Assets.getBulletSound().setFramePosition(0);
-                Assets.getBulletSound().start();
-           }
+        else if(e.getKeyCode() == KeyEvent.VK_ENTER && gameStarted && gameOver){
+            gameStarted = false;
+            recordLoaded = false;
+            Record.SaveGame(def.getPlayerName(), def.getScore(), def.getLevel());
+            // if(!recordLoaded && Record.loadGame() != null){
+            //     recordStructArr = Record.loadGame();
+            //     recordLoaded = true;
+            //     for (RecordStruct data : recordStructArr) {
+            //         System.out.println("[" + data.timestamp + "] " + data.playerName +
+            //             " scored " + data.score + " at level " + data.level);
+            //     }
+            // }
+        }
+
+        // if(!gameOver && gameStarted) {
+        //     // if(e.getKeyCode() == KeyEvent.VK_SPACE || e.getKeyCode() == KeyEvent.VK_UP &&  System.currentTimeMillis() - def.getShootBuffer() > def.getBufferTime()){
+        //     if((e.getKeyCode() == KeyEvent.VK_SPACE || e.getKeyCode() == KeyEvent.VK_UP) &&  System.currentTimeMillis() - def.getShootBuffer() > def.getBufferTime()){
+        //         Block bullet  = new Block(ship.getX() + def.getShipWidth()*15/32, ship.getY(), def.getBulletWidth() + def.getAttackSize(), def.getBulletHeight(), null);
+        //         Assets.BulletArray.add(bullet);
+        //         def.setShootBuffer(System.currentTimeMillis());
+        //         if (Assets.getBulletSound() != null) {
+        //             Assets.getBulletSound().setFramePosition(0);
+        //             Assets.getBulletSound().start();
+        //         }
+        //     }
+        //     if (e.getKeyCode() == KeyEvent.VK_Q && gameOver == false) {
+        //         if (Assets.getQuitEffect() != null) {
+        //             Assets.getQuitEffect().setFramePosition(0);
+        //         }
+        //     }
+        // }
+
+     
+    }
+
+    
+
+        
+
+    @Override
+    public void keyReleased(KeyEvent e) {
+        if (e.getKeyCode() == KeyEvent.VK_LEFT && ship.getX() - def.getShipVelocityX() >= 0) {
+            def.setLeft(false);
+        }
+        if(e.getKeyCode() == KeyEvent.VK_RIGHT && ship.getX() + ship.getWidth() + def.getShipVelocityX() <= def.getBoardWidth()){
+            def.setRight(false);
+        }
+               
+
+        if(!gameOver && gameStarted) {
+            // if(e.getKeyCode() == KeyEvent.VK_SPACE || e.getKeyCode() == KeyEvent.VK_UP &&  System.currentTimeMillis() - def.getShootBuffer() > def.getBufferTime()){
+            if((e.getKeyCode() == KeyEvent.VK_SPACE || e.getKeyCode() == KeyEvent.VK_UP) &&  System.currentTimeMillis() - def.getShootBuffer() > def.getBufferTime()){
+                Block bullet  = new Block(ship.getX() + def.getShipWidth()*15/32, ship.getY(), def.getBulletWidth() + def.getAttackSize(), def.getBulletHeight(), null);
+                Assets.BulletArray.add(bullet);
+                def.setShootBuffer(System.currentTimeMillis());
+                if (Assets.getBulletSound() != null) {
+                    Assets.getBulletSound().setFramePosition(0);
+                    Assets.getBulletSound().start();
+                }
+            }
+            if (e.getKeyCode() == KeyEvent.VK_Q && gameOver == false) {
+                if (Assets.getQuitEffect() != null) {
+                    Assets.getQuitEffect().setFramePosition(0);
+                }
+            }
         }
     }
 }   

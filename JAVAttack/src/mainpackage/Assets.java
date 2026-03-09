@@ -87,51 +87,81 @@ public class Assets {
         ActivePowerupsArr = new ArrayList<ActivePowerup>();
             
         try {
-            //  Load main background music
+            // Load main menu music
+            AudioInputStream mainMenu = AudioSystem.getAudioInputStream(Assets.class.getResource("/assets/music/retro.wav"));
+            mainMenuMusic = AudioSystem.getClip();
+            mainMenuMusic.open(mainMenu);
+            //  Load ingame main background music
             AudioInputStream audioInputStream = AudioSystem.getAudioInputStream(Assets.class.getResource("/assets/music/console.wav"));
             backgroundMusic = AudioSystem.getClip();
-            backgroundMusic.open(audioInputStream);
-             // Get the volume control from the clip
-            FloatControl backgroundVolumeControl = (FloatControl) backgroundMusic.getControl(FloatControl.Type.MASTER_GAIN);
-
-            // Set volume (in decibels)
-            // Range is usually from -80.0 (mute) to 6.0 (max boost)
-            backgroundVolumeControl.setValue(-10.0f); // Example: reduce volume
-
+            backgroundMusic.open(audioInputStream);  
             //  Load boss background music
             AudioInputStream boss = AudioSystem.getAudioInputStream(Assets.class.getResource("/assets/music/chad.wav"));
             bossBackgroundMusic = AudioSystem.getClip();
             bossBackgroundMusic.open(boss);
-            FloatControl bossBackgroundVolumeControl = (FloatControl) bossBackgroundMusic.getControl(FloatControl.Type.MASTER_GAIN);
-            bossBackgroundVolumeControl.setValue(0f); 
-
             // Load bullet sound
             AudioInputStream bullet = AudioSystem.getAudioInputStream(Assets.class.getResource("/assets/effects/shootShip2.wav"));
             bulletSound = AudioSystem.getClip();
             bulletSound.open(bullet);
-            FloatControl bulletvolumeControl = (FloatControl) bulletSound.getControl(FloatControl.Type.MASTER_GAIN);
-            bulletvolumeControl.setValue(-5.0f); 
-
             // Load alien death sound effect
+            // AudioInputStream alien = AudioSystem.getAudioInputStream(Assets.class.getResource("/assets/effects/fahhh.wav"));
             AudioInputStream alien = AudioSystem.getAudioInputStream(Assets.class.getResource("/assets/effects/destroyAlien2.wav"));
             deadSound = AudioSystem.getClip();
             deadSound.open(alien);
-            FloatControl deathvolumeControl = (FloatControl) deadSound.getControl(FloatControl.Type.MASTER_GAIN);
-            deathvolumeControl.setValue(0f);
-
              // Load game over sound effect
             AudioInputStream bulletAudioInputStream = AudioSystem.getAudioInputStream(Assets.class.getResource("/assets/effects/destroyAlien.wav"));
             gameOverSound = AudioSystem.getClip();
-            gameOverSound.open(bulletAudioInputStream);
-            FloatControl overVolumeControl = (FloatControl) gameOverSound.getControl(FloatControl.Type.MASTER_GAIN);
-            overVolumeControl.setValue(0f);
-
+            gameOverSound.open(bulletAudioInputStream);            
             // Load new Level sound effect
             AudioInputStream newLevel = AudioSystem.getAudioInputStream(Assets.class.getResource("/assets/effects/newLevel.wav"));
             newLevelSound = AudioSystem.getClip();
             newLevelSound.open(newLevel);
+            // pause
+            AudioInputStream pause = AudioSystem.getAudioInputStream(Assets.class.getResource("/assets/effects/pause.wav"));
+            pauseEffect = AudioSystem.getClip();
+            pauseEffect.open(pause);
+            //quit
+            AudioInputStream quit = AudioSystem.getAudioInputStream(Assets.class.getResource("/assets/effects/quit.wav"));
+            quitEffect = AudioSystem.getClip();
+            quitEffect.open(quit);
+
+
+             // Get the volume control from the clip
+            FloatControl backgroundVolumeControl = (FloatControl) backgroundMusic.getControl(FloatControl.Type.MASTER_GAIN);
+            // Set volume (in decibels)
+            // Range is usually from -80.0 (mute) to 6.0 (max boost)
+            backgroundVolumeControl.setValue(0f); // Example: reduce volume
+            FloatControl mainMenuVolumeControl = (FloatControl) mainMenuMusic.getControl(FloatControl.Type.MASTER_GAIN);
+            mainMenuVolumeControl.setValue(+6.0f);
+            FloatControl bossBackgroundVolumeControl = (FloatControl) bossBackgroundMusic.getControl(FloatControl.Type.MASTER_GAIN);
+            bossBackgroundVolumeControl.setValue(0f); 
+            FloatControl bulletvolumeControl = (FloatControl) bulletSound.getControl(FloatControl.Type.MASTER_GAIN);
+            bulletvolumeControl.setValue(+6f); 
+            FloatControl deathvolumeControl = (FloatControl) deadSound.getControl(FloatControl.Type.MASTER_GAIN);
+            deathvolumeControl.setValue(+6f);
+            FloatControl overVolumeControl = (FloatControl) gameOverSound.getControl(FloatControl.Type.MASTER_GAIN);
+            overVolumeControl.setValue(+6f);
             FloatControl newLevelVolumeControl = (FloatControl) newLevelSound.getControl(FloatControl.Type.MASTER_GAIN);
-            newLevelVolumeControl.setValue(-2.0f);
+            newLevelVolumeControl.setValue(+4f);
+            FloatControl pauseVolumeControl = (FloatControl) pauseEffect.getControl(FloatControl.Type.MASTER_GAIN);
+            pauseVolumeControl.setValue(+5f);
+            FloatControl quitVolumeControl = (FloatControl) quitEffect.getControl(FloatControl.Type.MASTER_GAIN);
+            quitVolumeControl.setValue(-3f);
+
+
+            
+
+            
+            // mainMenuVolumeControl.setValue(mainMenuVolumeControl.getMinimum());
+            // backgroundVolumeControl.setValue(mainMenuVolumeControl.getMinimum());
+            // bossBackgroundVolumeControl.setValue(mainMenuVolumeControl.getMinimum()); 
+            // bulletvolumeControl.setValue(mainMenuVolumeControl.getMinimum()); 
+            // deathvolumeControl.setValue(mainMenuVolumeControl.getMinimum());
+            // overVolumeControl.setValue(mainMenuVolumeControl.getMinimum());
+            // newLevelVolumeControl.setValue(mainMenuVolumeControl.getMinimum());
+            // pauseVolumeControl.setValue(mainMenuVolumeControl.getMinimum());
+            // quitVolumeControl.setValue(mainMenuVolumeControl.getMinimum());
+
         } catch (Exception e) {
             e.printStackTrace();
         }
